@@ -14,6 +14,7 @@ package org.eclipse.smarthome.io.iota.internal;
 
 import java.util.Collection;
 
+import org.eclipse.smarthome.core.items.GenericItem;
 import org.eclipse.smarthome.core.items.Item;
 import org.eclipse.smarthome.core.items.ItemRegistry;
 import org.eclipse.smarthome.core.items.ItemRegistryChangeListener;
@@ -21,49 +22,51 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jota.IotaAPI;
-import jota.dto.response.GetNodeInfoResponse;
 
 /**
  * Listens for changes to the item registry.
+ * This class will allow items to be listened to through the IotaItemStateChangeListener class if they
+ * contain the metadata IOTA, when created.
  *
  * @author Theo Giovanna - Initial Contribution
  */
-public class IotaChangeListener implements ItemRegistryChangeListener {
+public class IotaRegistryChangeListener implements ItemRegistryChangeListener {
+
+    // TODO listen to item updates only if it contains the metadata "iota" (or tag?)
+    // TODO implement the removed method
 
     private ItemRegistry itemRegistry;
-    private final Logger logger = LoggerFactory.getLogger(IotaChangeListener.class);
+    private final Logger logger = LoggerFactory.getLogger(IotaRegistryChangeListener.class);
     private IotaSettings settings;
-    IotaAPI bridge;
+    private final IotaItemStateChangeListener stateListener = new IotaItemStateChangeListener();
 
     @Override
     public void added(Item element) {
-        // TODO Auto-generated method stub
-        logger.debug("---------------------------------- item ADDED: {}", element.getName());
+        if (element instanceof GenericItem) {
+            ((GenericItem) element).addStateChangeListener(stateListener);
+            logger.debug("IOTA STATE LISTENER ADDED FOR ITEM {}", element.getName());
+        }
     }
 
     @Override
     public void removed(Item element) {
-        // TODO Auto-generated method stub
         logger.debug("---------------------------------- item REMOVED: {}", element.getName());
     }
 
     @Override
     public void updated(Item oldElement, Item element) {
-        // TODO Auto-generated method stub
-        logger.debug("---------------------------------- UPDATED: from {} to {}", oldElement.getName(),
-                element.getName());
+        // not needed
     }
 
     @Override
     public void allItemsChanged(Collection<String> oldItemNames) {
-        // TODO Auto-generated method stub
-        logger.debug("---------------------------------- ALLITEMS");
+        // not needed
     }
 
     public synchronized void setItemRegistry(ItemRegistry itemRegistry) {
         this.itemRegistry = itemRegistry;
-        itemRegistry.addRegistryChangeListener(this);
-        itemRegistry.getAll().forEach(item -> added(item));
+        this.itemRegistry.addRegistryChangeListener(this);
+        this.itemRegistry.getAll().forEach(item -> added(item));
     }
 
     public IotaSettings getSettings() {
@@ -74,14 +77,12 @@ public class IotaChangeListener implements ItemRegistryChangeListener {
         this.settings = settings;
     }
 
-    public IotaAPI getBridge() {
-        return bridge;
-    }
-
+    /**
+     * Set the IOTA API bridge to the instance of IotaItemStateChangeLister that listens to state updates.
+     * This will allow the class IotaItemStateChangeListener to publish states to the Tangle for registered items.
+     */
     public void setBridge(IotaAPI bridge) {
-        this.bridge = bridge;
-        GetNodeInfoResponse getNodeInfoResponse = bridge.getNodeInfo();
-        logger.debug("IOTA CONNECTION SUCCESS: {}", getNodeInfoResponse);
+        stateListener.setBridge(bridge);
     }
 
 }

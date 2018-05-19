@@ -17,27 +17,24 @@ import java.util.Map;
 
 import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.items.ItemRegistry;
-import org.eclipse.smarthome.io.iota.Iota;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jota.IotaAPI;
 
 /**
- * Provides access to ESH items via the IOTA API
+ * Set up the IOTA API and the registry listener
  *
  * @author Theo Giovanna - Initial Contribution
  */
-public class IotaImpl implements Iota {
+public class Iota {
 
-    private final Logger logger = LoggerFactory.getLogger(IotaImpl.class);
-    private final IotaChangeListener changeListener = new IotaChangeListener();
+    // TODO Deactivate function
+    // TODO Clear the previous listener when the IOTA API config changes
+
+    private final Logger logger = LoggerFactory.getLogger(Iota.class);
+    private final IotaRegistryChangeListener changeListener = new IotaRegistryChangeListener();
     private final IotaSettings settings = new IotaSettings();
-
-    @Override
-    public void hello() {
-        logger.debug("Hello, World!");
-    }
 
     public void setItemRegistry(ItemRegistry itemRegistry) {
         changeListener.setSettings(settings);
@@ -51,8 +48,6 @@ public class IotaImpl implements Iota {
     protected synchronized void activate(Map<String, Object> data) {
         modified(new Configuration(data).as(IotaApiConfiguration.class));
     }
-
-    // TODO: deactivate function
 
     protected synchronized void modified(IotaApiConfiguration config) {
         try {
@@ -72,7 +67,7 @@ public class IotaImpl implements Iota {
     }
 
     private void start() {
-        // Updates the bridge
+        // Set the bridge with the config of the Paper UI
         changeListener.setBridge(new IotaAPI.Builder().protocol(settings.getProtocol()).host(settings.getHost())
                 .port(String.valueOf(settings.getPort())).build());
     }
