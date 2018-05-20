@@ -29,30 +29,34 @@ import jota.dto.response.GetNodeInfoResponse;
  */
 public class IotaItemStateChangeListener implements StateChangeListener {
 
-    // TODO Publish the state to the Tangle
+    // TODO Get the hash of the publicated state on the Tangle
 
     private final Logger logger = LoggerFactory.getLogger(IotaItemStateChangeListener.class);
     IotaAPI bridge;
+    private final IotaUtils utils = new IotaUtils();
 
     @Override
     public void stateChanged(@NonNull Item item, @NonNull State oldState, @NonNull State newState) {
-        logger.debug("--------------------------- I am item {} and my state changed from {} to {}", item.getName(),
-                oldState, newState);
-        // TODO Auto-generated method stub
-
+        logger.debug("I am item {} and my state changed from {} to {}", item.getName(), oldState, newState);
+        // For testing only:
+        // utils.publishState(this.bridge, item, newState, "", "");
     }
 
     @Override
     public void stateUpdated(@NonNull Item item, @NonNull State state) {
-        logger.debug("--------------------------- I am item {} and my state {} updated", item.getName(), state);
-        // TODO Auto-generated method stub
-
+        // not needed: the state has been updated but is identical to the oldState, therefore it is not necessary to
+        // re-upload the state to the Tangle
+        logger.debug("------------------- thing: {}, item: {}, state: {}", item.getName(), item.getCategory(), state);
+        // For testing only:
+        // logger.debug("Decoded state: {}", utils.getStateFromTransaction(new String[] { "" }, this.bridge));
     }
 
     public void setBridge(IotaAPI bridge) {
         this.bridge = bridge;
-        GetNodeInfoResponse getNodeInfoResponse = bridge.getNodeInfo();
-        logger.debug("IOTA CONNECTION SUCCESS: {}", getNodeInfoResponse);
+        if (this.bridge != null) {
+            GetNodeInfoResponse getNodeInfoResponse = bridge.getNodeInfo();
+            logger.debug("IOTA CONNECTION SUCCESS: {}", getNodeInfoResponse);
+        }
     }
 
 }
