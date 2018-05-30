@@ -31,7 +31,7 @@ public class IotaSettings {
     private final Logger logger = LoggerFactory.getLogger(IotaSettings.class);
 
     /**
-     * Taken from org.openhab.io.homekit.internal
+     * Adapted from org.openhab.io.homekit.internal
      *
      * @author Andy Lintner
      */
