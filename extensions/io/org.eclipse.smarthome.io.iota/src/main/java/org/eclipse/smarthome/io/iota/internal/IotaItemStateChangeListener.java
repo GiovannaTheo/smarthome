@@ -37,7 +37,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
 
     @Override
     public void stateChanged(@NonNull Item item, @NonNull State oldState, @NonNull State newState) {
-        logger.debug("I am item {} and my state changed from {} to {}", item.getName(), oldState, newState);
+        // logger.debug("I am item {} and my state changed from {} to {}", item.getName(), oldState, newState);
         // For testing only:
         // utils.publishState(this.bridge, item, newState, "", "");
     }
@@ -49,6 +49,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
         logger.debug("------------------- thing: {}, item: {}, state: {}", item.getName(), item.getCategory(), state);
         // For testing only:
         // logger.debug("Decoded state: {}", utils.getStateFromTransaction(new String[] { "" }, this.bridge));
+        utils.publishState(this.bridge, item, state);
     }
 
     public void setBridge(IotaAPI bridge) {

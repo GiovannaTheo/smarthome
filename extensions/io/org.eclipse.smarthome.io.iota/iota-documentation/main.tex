@@ -101,6 +101,8 @@ The basic idea behind this add-on is to use the Tangle capabilities in order to 
 
 \subsubsection{Publishing an item's state to the Tangle}
 
+% TODO: Explain MAM
+
 The iota add-on implements several interfaces from ESH, some of which are enumerated and explained below:
 
 \begin{itemize}
@@ -303,25 +305,13 @@ public class IotaSettings {
  * @author Theo Giovanna - Initial Contribution
  */
 public class IotaUtils {
-
-	/**
-	 * Cut the fragment message contained in the IOTA transaction to remove the 
-	 * padded 9's and isolate the message
-	 */
-	protected String revealMessage(String trytes) {}
 	
 	/**
 	 * Attach an item's state to the Tangle
 	 */
 	protected void publishState(@NonNull IotaAPI bridge, @NonNull Item item, 
-	State state, String to, String seed) {}
+	State state) {}
 	
-	/**
-	 * Returns the state of an item, contained in an IOTA transaction
-	 */
-	protected String getStateFromTransaction(String[] transactions, 
-	@NonNull IotaAPI bridge) {}
-
 }
 \end{minted}
 

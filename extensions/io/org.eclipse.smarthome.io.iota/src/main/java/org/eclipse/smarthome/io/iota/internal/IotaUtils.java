@@ -12,24 +12,19 @@
  */
 package org.eclipse.smarthome.io.iota.internal;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
 
+import org.apache.commons.io.IOUtils;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.smarthome.core.items.Item;
 import org.eclipse.smarthome.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import jota.IotaAPI;
-import jota.dto.response.SendTransferResponse;
-import jota.error.InvalidAddressException;
-import jota.error.InvalidSecurityLevelException;
-import jota.error.InvalidTransferException;
-import jota.error.InvalidTrytesException;
-import jota.error.NotEnoughBalanceException;
-import jota.model.Transaction;
-import jota.model.Transfer;
 import jota.utils.TrytesConverter;
 
 /**
@@ -42,82 +37,63 @@ public class IotaUtils {
     private final Logger logger = LoggerFactory.getLogger(IotaUtils.class);
     private final String[] testHash = new String[] {
             "KSLBYEYSBWSARILO9CYIBQYMXXLCZAK9PIUCPNAEUYGHELWEOQEECGPYBOAIIJBUUMJFJEBDGBMB99999" };
-    private final String testMessage = "XCHDTCADDBEACCTCADDDTCFDPCHDIDFDTCEAWCPCGDEAGDHDPCHDTCDBEAWA9BEAEA999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999";
-    private final String testTo = "WHHVYHHLINKIDWFVCXMFAM9TZ9RKWTMTOOWJJBIDWGWVMFUUAAYDQMCXZPWEPZGLICZCFQGMOCMWSEP99RWZQHHDYY";
-    private final String testSeed = "PQYDZVXCN9UALNNXFVSYGLBWXSHWGBUPKGCCLDDTBPN9WJWPZFVMBLHIEVILPYWEDDTGTNBBWMLMOKDCM";
-    private final String emptyTag = "999999999999999999999999999";
+    private static final String PATH = "../../extensions/io/org.eclipse.smarthome.io.iota/src/main/java/org/eclipse/smarthome/io/iota/mam.client.js/example/";
+    private int start = 0;
+    private String seed = "";
 
     public IotaUtils() {
 
     }
 
     /**
-     * Cut the fragment message contained in the IOTA transaction to remove the padded 9's
-     *
-     * @param trytes the trytes to cut
-     * @return the broadcasted message, converted from trytes to String
-     */
-    protected String revealMessage(String trytes) {
-        String tmp = "";
-        Integer stop = 0;
-        for (int i = trytes.length() - 1; i >= 0; i--) {
-            if (trytes.charAt(i) != '9' && stop == 0) {
-                stop = 1;
-                tmp = trytes.charAt(i) + tmp;
-            } else {
-                if (stop == 1) {
-                    tmp = trytes.charAt(i) + tmp;
-                }
-            }
-        }
-
-        logger.debug("Transaction message in trytes: {}", tmp);
-
-        return TrytesConverter.toString(tmp);
-    }
-
-    /**
-     * Attach an item state on the Tangle
+     * Attach an item state on the Tangle, through MAM
      *
      * @param bridge the IOTA API endpoint
      * @param item the item for which we want to publish data
      * @param state the item's state
-     * @param to the recepient address
-     * @param seed the seed
      */
-    protected void publishState(@NonNull IotaAPI bridge, @NonNull Item item, State state, String to, String seed) {
-        List transfers = new ArrayList<>();
-        logger.debug("Creating transfer for item {} of state {}", item.getName(), state.toString());
-        Transfer t = new Transfer(this.testTo, 0,
-                TrytesConverter.toTrytes("item: " + item.getName() + " has state: " + state.toFullString()), emptyTag);
-        transfers.add(t);
+    protected void publishState(@NonNull IotaAPI bridge, @NonNull Item item, State state) {
+
+        // Adding some slash so we know where to seperate the item name from its state
+        String tryteItemName = TrytesConverter.toTrytes(item.getName().toString() + "/////");
+        String tryteItemState = TrytesConverter.toTrytes(state.toFullString());
+
+        JsonParser parser = new JsonParser();
+
         try {
-            SendTransferResponse resp = bridge.sendTransfer(this.testSeed, 2, 9, 15, transfers, null, null);
-            logger.debug("Transaction terminated. Status: {}", resp.toString());
-            logger.debug("Now wait for the transaction to be confirmed by the network");
-        } catch (NotEnoughBalanceException e) {
+            if (this.start == 0) {
+                logger.debug("Doing proof of work to attach data to the Tangle....");
+                String[] command = { "/usr/local/bin/node", PATH + "publishPublic.js",
+                        bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
+                        tryteItemName, tryteItemState };
+                Process p = Runtime.getRuntime().exec(command);
+                String result = IOUtils.toString(p.getInputStream(), "UTF-8");
+                if (result != null && !result.isEmpty()) {
+                    JsonObject json = (JsonObject) parser.parse(result);
+                    this.start = json.getAsJsonPrimitive("Start").getAsInt();
+                    this.seed = json.getAsJsonPrimitive("Seed").getAsString();
+                    logger.debug("{}", json);
+                }
+                p.waitFor();
+            } else {
+                logger.debug("Doing proof of work to attach data to the Tangle....");
+                String[] command = { "/usr/local/bin/node", PATH + "publishPublic.js",
+                        bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
+                        tryteItemName, tryteItemState, this.seed, String.valueOf(this.start) };
+                Process p = Runtime.getRuntime().exec(command);
+                String result = IOUtils.toString(p.getInputStream(), "UTF-8");
+                if (result != null && !result.isEmpty()) {
+                    JsonObject json = (JsonObject) parser.parse(result);
+                    this.start = json.getAsJsonPrimitive("Start").getAsInt();
+                    this.seed = json.getAsJsonPrimitive("Seed").getAsString();
+                    logger.debug("{}", json);
+                }
+                p.waitFor();
+            }
+        } catch (IOException e) {
             e.printStackTrace();
-        } catch (InvalidSecurityLevelException e) {
-            e.printStackTrace();
-        } catch (InvalidTrytesException e) {
-            e.printStackTrace();
-        } catch (InvalidAddressException e) {
-            e.printStackTrace();
-        } catch (InvalidTransferException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     *
-     * @param transactions an array of transactions hash
-     * @param bridge the IOTA API endpoint
-     * @return the message contained in the latest transaction
-     */
-
-    protected String getStateFromTransaction(String[] transactions, @NonNull IotaAPI bridge) {
-        List<Transaction> t = bridge.getTransactionsObjects(this.testHash);
-        String message = t.get(0).getSignatureFragments(); // gets last transaction
-        return this.revealMessage(message);
     }
 }

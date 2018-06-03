@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
 import jota.IotaAPI;
 
 /**
- * Set up the IOTA API and the registry listener
+ * Set up the IOTA API and the metadata listener
  *
  * @author Theo Giovanna - Initial Contribution
  */
