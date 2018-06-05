@@ -10,14 +10,12 @@ async function fetch() {
     const resp = await Mam.fetch(process.argv[3], 'public', null)
 
     if (resp.length !== 0) {
-    	tmp = resp.messages[0].split('TATATATATA')
 
 	    msg = 
-`{ 
-    Name: ` + iota.utils.fromTrytes(tmp[0]) + ` ,
-    State: ` + iota.utils.fromTrytes(tmp[1]) + `,
-    Root: ` + process.argv[3] + `, 
-    NextRoot: ` + resp.nextRoot + `
+`{` +
+    iota.utils.fromTrytes(resp.messages[0]) + ` ,
+    ROOT: ` + process.argv[3] + `, 
+    NEXTROOT: ` + resp.nextRoot + `
 }`
 
 	    console.log(msg)

@@ -16,8 +16,6 @@ import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jdt.annotation.NonNull;
-import org.eclipse.smarthome.core.items.Item;
-import org.eclipse.smarthome.core.types.State;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +23,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import jota.IotaAPI;
-import jota.utils.TrytesConverter;
 
 /**
  * Provides utils methods to work with IOTA transactions
@@ -53,30 +50,27 @@ public class IotaUtils {
      * @param item the item for which we want to publish data
      * @param state the item's state
      */
-    protected void publishState(@NonNull IotaAPI bridge, @NonNull Item item, State state) {
+    protected synchronized void publishState(@NonNull IotaAPI bridge, @NonNull JsonObject states) {
 
         // Adding some slash so we know where to seperate the item name from its state
-        String tryteItemName = TrytesConverter.toTrytes(item.getName().toString() + "/////");
-        String tryteItemState = TrytesConverter.toTrytes(state.toFullString());
+        String publish = states.toString();
 
         JsonParser parser = new JsonParser();
 
         try {
             logger.debug("Doing proof of work to attach data to the Tangle....");
-            String[] cmd = this.start == 0
-                    ? new String[] { "/usr/local/bin/node", PATH + "publishPublic.js",
-                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
-                            tryteItemName, tryteItemState }
+            String[] cmd = this.start == 0 ? new String[] { "/usr/local/bin/node", PATH + "publishPublic.js",
+                    bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), publish }
                     : new String[] { "/usr/local/bin/node", PATH + "publishPublic.js",
                             bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
-                            tryteItemName, tryteItemState, this.seed, String.valueOf(this.start) };
+                            publish, this.seed, String.valueOf(this.start) };
             Process p = Runtime.getRuntime().exec(cmd);
             String result = IOUtils.toString(p.getInputStream(), "UTF-8");
             if (result != null && !result.isEmpty()) {
                 JsonObject json = (JsonObject) parser.parse(result);
-                this.start = json.getAsJsonPrimitive("Start").getAsInt();
-                this.seed = json.getAsJsonPrimitive("Seed").getAsString();
-                this.root = json.getAsJsonPrimitive("Root").getAsString();
+                this.start = json.getAsJsonPrimitive("START").getAsInt();
+                this.seed = json.getAsJsonPrimitive("SEED").getAsString();
+                this.root = json.getAsJsonPrimitive("ROOT").getAsString();
                 logger.debug("Sent: {}", json);
             }
             p.waitFor();
@@ -90,7 +84,7 @@ public class IotaUtils {
      *
      * @param bridge the IOTA API endpoint
      */
-    protected JsonObject getItemState(@NonNull IotaAPI bridge) {
+    protected synchronized JsonObject getItemState(@NonNull IotaAPI bridge) {
         JsonParser parser = new JsonParser();
         JsonObject json = new JsonObject();
         String[] cmd = new String[] { "/usr/local/bin/node", PATH + "fetchAsync.js",
