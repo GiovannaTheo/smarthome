@@ -34,12 +34,13 @@ import jota.utils.TrytesConverter;
  */
 public class IotaUtils {
 
+    // TODO: cleanup code + retrieve states
+
     private final Logger logger = LoggerFactory.getLogger(IotaUtils.class);
-    private final String[] testHash = new String[] {
-            "KSLBYEYSBWSARILO9CYIBQYMXXLCZAK9PIUCPNAEUYGHELWEOQEECGPYBOAIIJBUUMJFJEBDGBMB99999" };
     private static final String PATH = "../../extensions/io/org.eclipse.smarthome.io.iota/src/main/java/org/eclipse/smarthome/io/iota/mam.client.js/example/";
     private int start = 0;
     private String seed = "";
+    private String root = "";
 
     public IotaUtils() {
 
@@ -61,39 +62,51 @@ public class IotaUtils {
         JsonParser parser = new JsonParser();
 
         try {
-            if (this.start == 0) {
-                logger.debug("Doing proof of work to attach data to the Tangle....");
-                String[] command = { "/usr/local/bin/node", PATH + "publishPublic.js",
-                        bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
-                        tryteItemName, tryteItemState };
-                Process p = Runtime.getRuntime().exec(command);
-                String result = IOUtils.toString(p.getInputStream(), "UTF-8");
-                if (result != null && !result.isEmpty()) {
-                    JsonObject json = (JsonObject) parser.parse(result);
-                    this.start = json.getAsJsonPrimitive("Start").getAsInt();
-                    this.seed = json.getAsJsonPrimitive("Seed").getAsString();
-                    logger.debug("{}", json);
-                }
-                p.waitFor();
-            } else {
-                logger.debug("Doing proof of work to attach data to the Tangle....");
-                String[] command = { "/usr/local/bin/node", PATH + "publishPublic.js",
-                        bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
-                        tryteItemName, tryteItemState, this.seed, String.valueOf(this.start) };
-                Process p = Runtime.getRuntime().exec(command);
-                String result = IOUtils.toString(p.getInputStream(), "UTF-8");
-                if (result != null && !result.isEmpty()) {
-                    JsonObject json = (JsonObject) parser.parse(result);
-                    this.start = json.getAsJsonPrimitive("Start").getAsInt();
-                    this.seed = json.getAsJsonPrimitive("Seed").getAsString();
-                    logger.debug("{}", json);
-                }
-                p.waitFor();
+            logger.debug("Doing proof of work to attach data to the Tangle....");
+            String[] cmd = this.start == 0
+                    ? new String[] { "/usr/local/bin/node", PATH + "publishPublic.js",
+                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
+                            tryteItemName, tryteItemState }
+                    : new String[] { "/usr/local/bin/node", PATH + "publishPublic.js",
+                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
+                            tryteItemName, tryteItemState, this.seed, String.valueOf(this.start) };
+            Process p = Runtime.getRuntime().exec(cmd);
+            String result = IOUtils.toString(p.getInputStream(), "UTF-8");
+            if (result != null && !result.isEmpty()) {
+                JsonObject json = (JsonObject) parser.parse(result);
+                this.start = json.getAsJsonPrimitive("Start").getAsInt();
+                this.seed = json.getAsJsonPrimitive("Seed").getAsString();
+                this.root = json.getAsJsonPrimitive("Root").getAsString();
+                logger.debug("Sent: {}", json);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+            p.waitFor();
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Retrieve an item state on the Tangle, through MAM
+     *
+     * @param bridge the IOTA API endpoint
+     */
+    protected JsonObject getItemState(@NonNull IotaAPI bridge) {
+        JsonParser parser = new JsonParser();
+        JsonObject json = new JsonObject();
+        String[] cmd = new String[] { "/usr/local/bin/node", PATH + "fetchAsync.js",
+                bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), this.root };
+        Process p;
+        try {
+            p = Runtime.getRuntime().exec(cmd);
+            String result = IOUtils.toString(p.getInputStream(), "UTF-8");
+            if (result != null && !result.isEmpty()) {
+                json = (JsonObject) parser.parse(result);
+                logger.debug("Retrieved: {}", json);
+            }
+            p.waitFor();
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
+        return json;
     }
 }

@@ -12,6 +12,7 @@
  */
 package org.eclipse.smarthome.io.iota.internal.metadata;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.eclipse.smarthome.core.common.registry.RegistryChangeListener;
 import org.eclipse.smarthome.core.items.GenericItem;
 import org.eclipse.smarthome.core.items.Item;
@@ -37,9 +38,6 @@ import jota.IotaAPI;
 @Component(immediate = true)
 public class IotaService implements RegistryChangeListener<Metadata> {
 
-    // TODO: clean metadata when channels are unlinked
-    // TODO: find a way to add the listener at startup (need to wait for this.itemRegistry to return items
-
     private MetadataRegistry metadataRegistry;
     private final Logger logger = LoggerFactory.getLogger(IotaService.class);
     private IotaItemRegistryListener itemListener;
@@ -58,11 +56,14 @@ public class IotaService implements RegistryChangeListener<Metadata> {
          */
         Item item;
         try {
-            item = this.itemListener.getItemRegistry().getItem(element.getUID().getItemName());
-            if (item instanceof GenericItem) {
-                if (element.getValue().equals("yes")) {
-                    logger.debug("----------------------- IOTA STATE LISTENER ADDED FOR THIS ITEM: {}", item.getName());
-                    ((GenericItem) item).addStateChangeListener(stateListener);
+            if (CollectionUtils.isNotEmpty(this.itemListener.getItemRegistry().getAll())) {
+                item = this.itemListener.getItemRegistry().getItem(element.getUID().getItemName());
+                if (item instanceof GenericItem) {
+                    if (element.getValue().equals("yes")) {
+                        logger.debug("----------------------- IOTA STATE LISTENER ADDED FOR THIS ITEM: {}",
+                                item.getName());
+                        ((GenericItem) item).addStateChangeListener(stateListener);
+                    }
                 }
             }
         } catch (ItemNotFoundException e) {

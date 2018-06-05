@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
  */
 public class IotaItemRegistryListener implements ItemRegistryChangeListener {
 
+    // TODO: call the removed method for each item belonging to a thing when removed (otherwise metadata stay)
+
     private ItemRegistry itemRegistry;
     private IotaService service;
     private final Logger logger = LoggerFactory.getLogger(IotaItemRegistryListener.class);

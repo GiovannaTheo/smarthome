@@ -49,7 +49,8 @@ public class IotaItemStateChangeListener implements StateChangeListener {
         logger.debug("------------------- thing: {}, item: {}, state: {}", item.getName(), item.getCategory(), state);
         // For testing only:
         // logger.debug("Decoded state: {}", utils.getStateFromTransaction(new String[] { "" }, this.bridge));
-        utils.publishState(this.bridge, item, state);
+        // utils.publishState(this.bridge, item, state);
+        // JsonObject mamState = utils.getItemState(this.bridge);
     }
 
     public void setBridge(IotaAPI bridge) {

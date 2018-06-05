@@ -97,7 +97,7 @@ The Tangle isn’t a blockchain per se, as it is block-less. Instead of miners s
 
 \subsection{ESH IOTA Add-on}
 
-The basic idea behind this add-on is to use the Tangle capabilities in order to share any item's state on it. Each transaction running on the Tangle contains several fiels: the receiving address, the amount... A field of particular interest is the \textit{SignatureFragments} one. This field allows one to add a message to the transaction, encoded in \textit{trytes}. Alike \textit{bytes} that are composed of \textit{bits}, a tryte is composed of several \textit{trits}. These trytes carry information, and in our case we use them to carry the item's state.
+The basic idea behind this add-on is to use the Tangle capabilities in order to share any item's state on it. Lately, IOTA revealed a new feature running on the Tangle: \textbf{Masked Authenticated Messaging}, or MAM for short. MAM is a second layer data communication protocol which adds functionality to emit and access an encrypted data stream, like RSS, over the Tangle, regardless of the size or cost of device. IOTA’s consensus protocol adds integrity to these message streams. Information on MAM can be found on their official \textcolor{blue}{\underline{\href{https://blog.iota.org/introducing-masked-authenticated-messaging-e55c1822d50e}{blog}}}. This add-on therefore uses MAM as a mean of communication between any ESH thing (providers) and entities that want to know the states of these things (subscribers). 
 
 \subsubsection{Publishing an item's state to the Tangle}
 
@@ -130,7 +130,7 @@ The iota add-on implements several interfaces from ESH, some of which are enumer
 \end{tcolorbox}
 \end{center}
 
-\noindent Since we defined the metadata \texttt{"iota=yes"}, the add-on will detect it and associate a state listener to this item. From now on, every update of this item will be detected and pushed on the Tangle, as a message of an IOTA transaction.
+\noindent Since we defined the metadata \texttt{"iota=yes"}, the add-on will detect it and associate a state listener to this item. From now on, every update of this item will be detected and pushed on the Tangle. In MAM, the first transaction emitted has a \texttt{Root} address. Any sub-sequent message (i.e. any new update on the item's state) will be published on the \texttt{NextRoot} address, which is contained in any transaction retrieved from MAM. In other words, a publisher will start emitting his data on the Tangle, through MAM, given a Root address. This root address will be used by any subscriber that wishes to listen to the publisher. In the first message that they retrieve, they will find, along the data, a new address (the NextRoot) which tells them where to look for the next message. In the next message, they'll be given a new NextRoot address, for the next update, and so on.
 
 \subsubsection{Retrieving an item's state from the Tangle}   
 
