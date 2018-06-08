@@ -82,7 +82,7 @@ public class IotaUtils {
     }
 
     /**
-     * Retrieve an item state on the Tangle, through MAM
+     * Retrieve an item state from the Tangle, through MAM
      *
      * @param bridge the IOTA API endpoint
      */

@@ -79,7 +79,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
     }
 
     /**
-     * Constructs a json object with all item names and states that need to be published on the Tangle
+     * Constructs a JSON object with all item names and states that will be published on the Tangle
      *
      * @param item
      * @param state
