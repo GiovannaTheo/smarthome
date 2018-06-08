@@ -12,6 +12,7 @@
  */
 package org.eclipse.smarthome.io.iota.internal;
 
+import java.time.Instant;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
@@ -63,7 +64,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
         debouncer.debounce(IotaItemStateChangeListener.class, new Runnable() {
             @Override
             public void run() {
-                utils.publishState(bridge, inputStates);
+                utils.publishState(bridge, inputStates.get("Items"));
                 JsonObject res = utils.getItemState(bridge);
             }
         }, 200, TimeUnit.MILLISECONDS);
@@ -88,6 +89,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
         if (this.inputStates.get("Items").getAsJsonArray().size() == 0) {
             newState.addProperty("Name", item.getName().toString());
             newState.addProperty("State", state.toFullString());
+            newState.addProperty("Time", Instant.now().toString());
             this.inputStates.get("Items").getAsJsonArray().add(newState);
         } else {
             for (Iterator<JsonElement> it = this.inputStates.get("Items").getAsJsonArray().iterator(); it.hasNext();) {
@@ -100,6 +102,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
             }
             newState.addProperty("Name", item.getName().toString());
             newState.addProperty("State", state.toFullString());
+            newState.addProperty("Time", Instant.now().toString());
             this.inputStates.get("Items").getAsJsonArray().add(newState);
         }
     }

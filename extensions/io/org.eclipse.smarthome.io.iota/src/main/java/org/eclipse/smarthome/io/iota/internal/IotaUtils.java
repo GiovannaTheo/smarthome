@@ -19,6 +19,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -50,10 +51,11 @@ public class IotaUtils {
      * @param item the item for which we want to publish data
      * @param state the item's state
      */
-    protected synchronized void publishState(@NonNull IotaAPI bridge, @NonNull JsonObject states) {
+    protected synchronized void publishState(@NonNull IotaAPI bridge, JsonElement jsonElement) {
 
-        // Adding some slash so we know where to seperate the item name from its state
-        String publish = states.toString();
+        // Format the states in a json understandable by the official mam explorer
+        // https://mam-explorer.firebaseapp.com/
+        String publish = "{ \n" + jsonElement.toString() + " \n }";
 
         JsonParser parser = new JsonParser();
 

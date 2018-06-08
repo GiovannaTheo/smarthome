@@ -29,8 +29,6 @@ import org.slf4j.LoggerFactory;
  */
 public class IotaItemRegistryListener implements ItemRegistryChangeListener {
 
-    // TODO: call the removed method for each item belonging to a thing when removed (otherwise metadata stay)
-
     private ItemRegistry itemRegistry;
     private IotaService service;
     private final Logger logger = LoggerFactory.getLogger(IotaItemRegistryListener.class);
@@ -64,14 +62,9 @@ public class IotaItemRegistryListener implements ItemRegistryChangeListener {
     @Override
     public void removed(Item element) {
         ((GenericItem) element).removeStateChangeListener(service.getStateListener());
-        this.service.getMetadataRegistry().getAll().forEach(metadata -> {
-            if (metadata.getUID().getItemName().equals(element.getName())) {
-                this.service.getMetadataRegistry().remove(metadata.getUID());
-                this.service.getStateListener().removeItemFromJson(element);
-                logger.debug("--------------- Item, Metadata, State listener removed for item {}",
-                        element.getName().toString());
-            }
-        });
+        this.service.getMetadataRegistry().removeItemMetadata(element.getName());
+        this.service.getStateListener().removeItemFromJson(element);
+        logger.debug("Item, Metadata, State listener removed for item {}", element.getName().toString());
     }
 
     @Override
