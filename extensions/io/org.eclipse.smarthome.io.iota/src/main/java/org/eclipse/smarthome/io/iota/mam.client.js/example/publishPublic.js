@@ -44,16 +44,16 @@ async function publish() {
 
     if (process.argv[4] === undefined) {
 
-        obj = await Mam.attach(message.payload, message.root)
+        obj = await Mam.attach(message.payload, message.address)
 
         if (obj.length !== 0) {
 
             msg = 
 `{ 
-    SEED: ` + mamState['seed'] + ` ,
-    ROOT: ` + message.root + `, 
-    NEXTROOT: ` + mamState['channel']['next_root'] + `,
-    START: ` + mamState['channel']['start'] + `
+    "SEED": "` + mamState['seed'] + `" ,
+    "ROOT": "` + message.root + `", 
+    "NEXTROOT": "` + mamState['channel']['next_root'] + `",
+    "START": "` + mamState['channel']['start'] + `"
 }`
 
         console.log(msg)

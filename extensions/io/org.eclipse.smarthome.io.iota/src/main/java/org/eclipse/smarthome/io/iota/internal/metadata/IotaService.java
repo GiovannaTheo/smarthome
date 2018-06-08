@@ -60,8 +60,7 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                 item = this.itemListener.getItemRegistry().getItem(element.getUID().getItemName());
                 if (item instanceof GenericItem) {
                     if (element.getValue().equals("yes")) {
-                        logger.debug("----------------------- IOTA STATE LISTENER ADDED FOR THIS ITEM: {}",
-                                item.getName());
+                        logger.debug("Iota state listener added for item: {}", item.getName());
                         ((GenericItem) item).addStateChangeListener(stateListener);
                     }
                 }
@@ -78,10 +77,16 @@ public class IotaService implements RegistryChangeListener<Metadata> {
 
     @Override
     public void updated(Metadata oldElement, Metadata element) {
-        logger.debug("----------------------- IOTA METADATA UPDATED FROM {} TO {}", oldElement.getValue(),
-                element.getValue());
+        logger.debug("Iota metadata updated from {} to {}", oldElement.getValue(), element.getValue());
         if (element.getValue().equals("yes")) {
             added(element);
+        } else {
+            try {
+                Item item = this.itemListener.getItemRegistry().getItem(oldElement.getUID().getItemName());
+                this.itemListener.removed(item);
+            } catch (ItemNotFoundException e) {
+                e.printStackTrace();
+            }
         }
     }
 

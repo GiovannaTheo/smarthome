@@ -9,13 +9,15 @@ async function fetch() {
     // Fetch Stream Async to Test
     const resp = await Mam.fetch(process.argv[3], 'public', null)
 
+    console.log(resp)
+
     if (resp.length !== 0) {
 
 	    msg = 
-`{` +
-    iota.utils.fromTrytes(resp.messages[0]) + ` ,
-    ROOT: ` + process.argv[3] + `, 
-    NEXTROOT: ` + resp.nextRoot + `
+`{ \n    ` +
+    iota.utils.fromTrytes(resp.messages[0]) + `,
+    "ROOT": "` + process.argv[3] + `", 
+    "NEXTROOT": "` + resp.nextRoot + `"
 }`
 
 	    console.log(msg)

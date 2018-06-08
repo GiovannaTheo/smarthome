@@ -67,7 +67,9 @@ public class IotaItemRegistryListener implements ItemRegistryChangeListener {
         this.service.getMetadataRegistry().getAll().forEach(metadata -> {
             if (metadata.getUID().getItemName().equals(element.getName())) {
                 this.service.getMetadataRegistry().remove(metadata.getUID());
-                logger.debug("----------------------- ITEM, METADATA, STATE LISTENER REMOVED ---------------");
+                this.service.getStateListener().removeItemFromJson(element);
+                logger.debug("--------------- Item, Metadata, State listener removed for item {}",
+                        element.getName().toString());
             }
         });
     }
