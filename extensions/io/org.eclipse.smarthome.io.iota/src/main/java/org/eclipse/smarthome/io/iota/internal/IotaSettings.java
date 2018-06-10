@@ -12,6 +12,7 @@
  */
 package org.eclipse.smarthome.io.iota.internal;
 
+import java.math.BigDecimal;
 import java.net.UnknownHostException;
 
 import org.slf4j.Logger;
@@ -37,17 +38,9 @@ public class IotaSettings {
      */
     public void fill(IotaApiConfiguration config) throws UnknownHostException {
         logger.debug("---------------------------------- UPDATING SETTINGS FOR IOTA API");
-        this.setHost(getOrDefault(config.getHost(), this.getHost()));
-        this.setProtocol(getOrDefault(config.getProtocol(), this.getProtocol()));
-        Object port = config.getPort();
-        if (port instanceof Integer) {
-            this.setPort((Integer) port);
-        } else if (port instanceof String) {
-            String portString = String.valueOf(config.getPort());
-            if (portString != null) {
-                this.setPort(Integer.parseInt(portString));
-            }
-        }
+        setHost(getOrDefault(config.getHost(), getHost()));
+        setProtocol(getOrDefault(config.getProtocol(), getProtocol()));
+        setPort(getOrDefault(config.getPort(), getPort()));
     }
 
     /**
@@ -57,6 +50,10 @@ public class IotaSettings {
      */
     private static String getOrDefault(Object value, String defaultValue) {
         return value != null ? (String) value : defaultValue;
+    }
+
+    private static int getOrDefault(Object value, int defaultValue) {
+        return value instanceof BigDecimal ? ((BigDecimal) value).intValue() : defaultValue;
     }
 
     public int getPort() {

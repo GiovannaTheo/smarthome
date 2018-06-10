@@ -56,12 +56,14 @@ public class IotaService implements RegistryChangeListener<Metadata> {
          */
         Item item;
         try {
-            if (CollectionUtils.isNotEmpty(this.itemListener.getItemRegistry().getAll())) {
-                item = this.itemListener.getItemRegistry().getItem(element.getUID().getItemName());
+            if (CollectionUtils.isNotEmpty(itemListener.getItemRegistry().getAll())) {
+                item = itemListener.getItemRegistry().getItem(element.getUID().getItemName());
                 if (item instanceof GenericItem) {
                     if (element.getValue().equals("yes")) {
                         logger.debug("Iota state listener added for item: {}", item.getName());
                         ((GenericItem) item).addStateChangeListener(stateListener);
+                        // publish the new item's state
+                        stateListener.stateUpdated(item, item.getState());
                     }
                 }
             }
@@ -82,8 +84,8 @@ public class IotaService implements RegistryChangeListener<Metadata> {
             added(element);
         } else {
             try {
-                Item item = this.itemListener.getItemRegistry().getItem(oldElement.getUID().getItemName());
-                this.itemListener.removed(item);
+                Item item = itemListener.getItemRegistry().getItem(oldElement.getUID().getItemName());
+                itemListener.removed(item);
             } catch (ItemNotFoundException e) {
                 e.printStackTrace();
             }
@@ -107,9 +109,9 @@ public class IotaService implements RegistryChangeListener<Metadata> {
      *
      */
     public void stop() {
-        if (this.metadataRegistry != null) {
-            this.metadataRegistry.getAll().forEach(metadata -> removed(metadata));
-            this.metadataRegistry.removeRegistryChangeListener(this);
+        if (metadataRegistry != null) {
+            metadataRegistry.getAll().forEach(metadata -> removed(metadata));
+            metadataRegistry.removeRegistryChangeListener(this);
         }
     }
 

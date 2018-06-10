@@ -39,7 +39,7 @@ public class Iota {
     public void setItemRegistry(ItemRegistry itemRegistry) {
         itemListener.setItemRegistry(itemRegistry);
         itemListener.setService(service);
-        service.setItemListener(this.itemListener);
+        service.setItemListener(itemListener);
         service.setSettings(settings);
     }
 
@@ -62,13 +62,13 @@ public class Iota {
             // Updates the listener with the new settings
             service.setSettings(settings);
         } catch (UnknownHostException e) {
-            logger.debug("Could not initialize IOTA API: {}", e.getMessage(), e);
+            logger.debug("Could not initialize IOTA API: {}", e.getMessage());
             return;
         }
         try {
             start();
         } catch (Exception e) {
-            logger.error("Could not initialize IOTA API: {}", e.getMessage(), e);
+            logger.error("Could not initialize IOTA API: {}", e.getMessage());
         }
     }
 

@@ -1,33 +1,27 @@
 const Mam = require('../lib/mam.client.js')
 const IOTA = require('iota.lib.js')
-const iota = new IOTA({ provider: `https://nodes.testnet.iota.org:443` })
-
-// Init State
-let root = 'SVMKV9GQF9QYFPEAAIVYHROYQTEHWGXTEPLUEXKTNEITAZMOARYLDPDLHUXVHLWPUHEYKOVOTVWATABSY'
+const iota = new IOTA({ provider: process.argv[2] })
 
 // Initialise MAM State
 let mamState = Mam.init(iota)
 
 // Publish to tangle
-const publish = async packet => {
-    const message = Mam.create(mamState, packet)
-    mamState = message.state
-    await Mam.attach(message.payload, message.address)
-    return message.root
-}
 
-const logData = data => console.log(JSON.parse(iota.utils.fromTrytes(data)))
+async function fetch () {
 
-const execute = async () => {
-    // Publish and save root.
-    // root = await publish('POTATOONE')
-    // Publish but not save root
-    // await publish('POTATOTWO')
-
-    ///////////////////////////////////
-    // Fetch the messages syncronously
-    const resp = await Mam.fetch(root, 'public', null, logData)
+    var resp = await Mam.fetch(process.argv[3], 'public')
     
+    while (resp.messages.length === 0){
+        resp = await Mam.fetch(process.argv[3], 'public')
+    }
+    
+    console.log(
+`{
+    ITEMS: ` + iota.utils.fromTrytes(resp.messages[0]).replace(/^\s+|\s+$/g, '') + `,
+    ROOT:  ` + process.argv[3] + `, 
+    NEXTROOT: ` + resp.nextRoot + `
+}`)
+
 }
 
-execute()
+fetch()

@@ -52,9 +52,9 @@ public class IotaItemRegistryListener implements ItemRegistryChangeListener {
 
     @Override
     public void added(Item element) {
-        this.service.getMetadataRegistry().getAll().forEach(metadata -> {
+        service.getMetadataRegistry().getAll().forEach(metadata -> {
             if (metadata.getUID().getItemName().equals(element.getName())) {
-                this.service.added(metadata);
+                service.added(metadata);
             }
         });
     }
@@ -62,8 +62,8 @@ public class IotaItemRegistryListener implements ItemRegistryChangeListener {
     @Override
     public void removed(Item element) {
         ((GenericItem) element).removeStateChangeListener(service.getStateListener());
-        this.service.getMetadataRegistry().removeItemMetadata(element.getName());
-        this.service.getStateListener().removeItemFromJson(element);
+        service.getMetadataRegistry().removeItemMetadata(element.getName());
+        service.getStateListener().removeItemFromJson(element);
         logger.debug("Item, Metadata, State listener removed for item {}", element.getName().toString());
     }
 

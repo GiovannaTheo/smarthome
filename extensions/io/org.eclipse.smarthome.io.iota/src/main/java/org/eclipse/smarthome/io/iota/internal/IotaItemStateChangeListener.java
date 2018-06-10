@@ -46,34 +46,31 @@ public class IotaItemStateChangeListener implements StateChangeListener {
     @Override
     public void stateChanged(@NonNull Item item, @NonNull State oldState, @NonNull State newState) {
         // this.addToStates(item, newState);
-        // Publish the new states to the Tangle if no items see their state changed after 200 ms
+        // // Publish the changed states
         // debouncer.debounce(IotaItemStateChangeListener.class, new Runnable() {
         // @Override
         // public void run() {
-        // utils.publishState(bridge, inputStates);
+        // utils.publishState(bridge, inputStates.get("Items"));
         // }
         // }, 200, TimeUnit.MILLISECONDS);
     }
 
     @Override
     public void stateUpdated(@NonNull Item item, @NonNull State state) {
-        // not needed: the state has been updated but is identical to the oldState, therefore it is not necessary to
-        // re-upload the state to the Tangle
-        // For testing only
-        this.addToStates(item, state);
+        // For testing purpose only: the state hasn't changed but has been updated, publishing again
+        addToStates(item, state);
         debouncer.debounce(IotaItemStateChangeListener.class, new Runnable() {
             @Override
             public void run() {
                 utils.publishState(bridge, inputStates.get("Items"));
-                JsonObject res = utils.getItemState(bridge);
             }
-        }, 200, TimeUnit.MILLISECONDS);
+        }, 500, TimeUnit.MILLISECONDS);
     }
 
     public void setBridge(IotaAPI bridge) {
         this.bridge = bridge;
         if (this.bridge != null) {
-            GetNodeInfoResponse getNodeInfoResponse = bridge.getNodeInfo();
+            GetNodeInfoResponse getNodeInfoResponse = this.bridge.getNodeInfo();
             logger.debug("Iota connexion success: {}", getNodeInfoResponse);
         }
     }
@@ -86,13 +83,13 @@ public class IotaItemStateChangeListener implements StateChangeListener {
      */
     public synchronized void addToStates(@NonNull Item item, @NonNull State state) {
         JsonObject newState = new JsonObject();
-        if (this.inputStates.get("Items").getAsJsonArray().size() == 0) {
+        if (inputStates.get("Items").getAsJsonArray().size() == 0) {
             newState.addProperty("Name", item.getName().toString());
             newState.addProperty("State", state.toFullString());
             newState.addProperty("Time", Instant.now().toString());
-            this.inputStates.get("Items").getAsJsonArray().add(newState);
+            inputStates.get("Items").getAsJsonArray().add(newState);
         } else {
-            for (Iterator<JsonElement> it = this.inputStates.get("Items").getAsJsonArray().iterator(); it.hasNext();) {
+            for (Iterator<JsonElement> it = inputStates.get("Items").getAsJsonArray().iterator(); it.hasNext();) {
                 JsonElement el = it.next();
                 String name = el.getAsJsonObject().get("Name").toString().replace("\"", "");
                 if (name.equals(item.getName().toString())) {
@@ -103,12 +100,12 @@ public class IotaItemStateChangeListener implements StateChangeListener {
             newState.addProperty("Name", item.getName().toString());
             newState.addProperty("State", state.toFullString());
             newState.addProperty("Time", Instant.now().toString());
-            this.inputStates.get("Items").getAsJsonArray().add(newState);
+            inputStates.get("Items").getAsJsonArray().add(newState);
         }
     }
 
     public void removeItemFromJson(@NonNull Item item) {
-        for (Iterator<JsonElement> it = this.inputStates.get("Items").getAsJsonArray().iterator(); it.hasNext();) {
+        for (Iterator<JsonElement> it = inputStates.get("Items").getAsJsonArray().iterator(); it.hasNext();) {
             JsonElement el = it.next();
             String name = el.getAsJsonObject().get("Name").toString().replace("\"", "");
             if (name.equals(item.getName().toString())) {

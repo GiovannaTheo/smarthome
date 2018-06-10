@@ -39,9 +39,15 @@ public class IotaUtils {
     private int start = 0;
     private String seed = "";
     private String root = "";
+    private IotaAPI bridge;
+    Process process;
 
     public IotaUtils() {
 
+    }
+
+    public IotaUtils(String protocol, String host, int port) {
+        this.bridge = new IotaAPI.Builder().protocol(protocol).host(host).port(String.valueOf(port)).build();
     }
 
     /**
@@ -61,48 +67,61 @@ public class IotaUtils {
 
         try {
             logger.debug("Doing proof of work to attach data to the Tangle....");
-            String[] cmd = this.start == 0 ? new String[] { "/usr/local/bin/node", PATH + "publishPublic.js",
+            String[] cmd = start == 0 ? new String[] { "/usr/local/bin/node", PATH + "publishPublic.js",
                     bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), publish }
                     : new String[] { "/usr/local/bin/node", PATH + "publishPublic.js",
                             bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
-                            publish, this.seed, String.valueOf(this.start) };
-            Process p = Runtime.getRuntime().exec(cmd);
-            String result = IOUtils.toString(p.getInputStream(), "UTF-8");
+                            publish, seed, String.valueOf(start) };
+            process = Runtime.getRuntime().exec(cmd);
+            String result = IOUtils.toString(process.getInputStream(), "UTF-8");
             if (result != null && !result.isEmpty()) {
                 JsonObject json = (JsonObject) parser.parse(result);
-                this.start = json.getAsJsonPrimitive("START").getAsInt();
-                this.seed = json.getAsJsonPrimitive("SEED").getAsString();
-                this.root = json.getAsJsonPrimitive("ROOT").getAsString();
+                start = json.getAsJsonPrimitive("START").getAsInt();
+                seed = json.getAsJsonPrimitive("SEED").getAsString();
+                root = json.getAsJsonPrimitive("ROOT").getAsString();
                 logger.debug("Sent: {}", json);
             }
-            p.waitFor();
+            process.waitFor();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * Retrieve an item state from the Tangle, through MAM
+     * Retrieve item states from the Tangle, through MAM
      *
      * @param bridge the IOTA API endpoint
      */
-    protected synchronized JsonObject getItemState(@NonNull IotaAPI bridge) {
+    public synchronized String fetchFromTangle(int refresh, String root) {
         JsonParser parser = new JsonParser();
         JsonObject json = new JsonObject();
-        String[] cmd = new String[] { "/usr/local/bin/node", PATH + "fetchAsync.js",
-                bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), this.root };
-        Process p;
+        String[] cmd = refresh == 0
+                ? new String[] { "/usr/local/bin/node", PATH + "fetchSync.js",
+                        bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root }
+                : new String[] { "/usr/local/bin/node", PATH + "fetchAsync.js",
+                        bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root };
         try {
-            p = Runtime.getRuntime().exec(cmd);
-            String result = IOUtils.toString(p.getInputStream(), "UTF-8");
+            process = Runtime.getRuntime().exec(cmd);
+            String result = IOUtils.toString(process.getInputStream(), "UTF-8");
             if (result != null && !result.isEmpty()) {
                 json = (JsonObject) parser.parse(result);
-                logger.debug("Retrieved: {}", json);
             }
-            p.waitFor();
+            process.waitFor();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-        return json;
+        return json.toString();
+    }
+
+    public boolean checkAPI() {
+        if (bridge.getNodeInfo() != null) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public Process getProcess() {
+        return process;
     }
 }
