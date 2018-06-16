@@ -48,8 +48,6 @@ public class IotaHandler extends BaseThingHandler {
     // TODO: solve the disposed handler problem
     // TODO: add tests for both the io and this binding
     // TODO: update the doc.
-    // TODO: add private MAM mode
-    // TODO: add restricted MAM mode
 
     private final Logger logger = LoggerFactory.getLogger(IotaHandler.class);
     private String root;
@@ -141,7 +139,7 @@ public class IotaHandler extends BaseThingHandler {
         boolean success = false;
         if (!root.isEmpty()) {
             JsonParser parser = new JsonParser();
-            JsonObject resp = parser.parse(utils.fetchFromTangle(refresh, root)).getAsJsonObject();
+            JsonObject resp = parser.parse(utils.fetchFromTangle(refresh, root, null)).getAsJsonObject();
             if (resp.size() != 0) {
                 root = resp.get("NEXTROOT").getAsString();
                 data = resp.entrySet().iterator().next().getValue().getAsJsonArray();

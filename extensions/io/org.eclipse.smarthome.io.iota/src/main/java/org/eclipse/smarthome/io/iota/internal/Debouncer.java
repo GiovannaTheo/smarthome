@@ -30,7 +30,7 @@ public class Debouncer {
     /**
      * Debounces {@code callable} by {@code delay}, i.e., schedules it to be executed after {@code delay},
      * or cancels its execution if the method is called with the same key within the {@code delay} again.
-     * 
+     *
      * @author simon04 https://stackoverflow.com/questions/4742210/implementing-debounce-in-java
      */
     public void debounce(final Object key, final Runnable runnable, long delay, TimeUnit unit) {

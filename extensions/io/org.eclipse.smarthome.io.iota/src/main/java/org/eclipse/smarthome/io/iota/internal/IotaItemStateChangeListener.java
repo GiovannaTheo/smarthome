@@ -13,6 +13,7 @@
 package org.eclipse.smarthome.io.iota.internal;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
@@ -20,6 +21,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.smarthome.core.items.Item;
 import org.eclipse.smarthome.core.items.StateChangeListener;
 import org.eclipse.smarthome.core.types.State;
+import org.eclipse.smarthome.io.iota.internal.metadata.IotaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +34,10 @@ import jota.dto.response.GetNodeInfoResponse;
 
 /**
  * Listens for changes to the state of registered items.
+ * Each item wishing to publish its state on the Tangle has a seed associated to its UID.
+ * A custom seed may be given to some item. This way, any ESH instance is able to select
+ * which item's state to share on which channel.
+ * Note: it is yet not possible for an item to share its state on multiple channels.
  *
  * @author Theo Giovanna - Initial Contribution
  */
@@ -39,32 +45,59 @@ public class IotaItemStateChangeListener implements StateChangeListener {
 
     private final Logger logger = LoggerFactory.getLogger(IotaItemStateChangeListener.class);
     private IotaAPI bridge;
-    private final IotaUtils utils = new IotaUtils();
-    private final JsonObject inputStates = new Gson().fromJson("{\"Items\":[]}", JsonObject.class);
-    final Debouncer debouncer = new Debouncer();
+    private final HashMap<String, JsonObject> seedToJsonMap = new HashMap<>();
+    private final HashMap<String, String> uidToSeedMap = new HashMap<>();
+    private final HashMap<String, Debouncer> seedToDebouncerMap = new HashMap<>();
+    private final HashMap<String, IotaUtils> seedToUtilsMap = new HashMap<>();
+    private final HashMap<String, String> seedToPrivateKeyMap = new HashMap<>();
+    private IotaService service;
 
     @Override
     public void stateChanged(@NonNull Item item, @NonNull State oldState, @NonNull State newState) {
-        // this.addToStates(item, newState);
-        // // Publish the changed states
-        // debouncer.debounce(IotaItemStateChangeListener.class, new Runnable() {
-        // @Override
-        // public void run() {
-        // utils.publishState(bridge, inputStates.get("Items"));
-        // }
-        // }, 200, TimeUnit.MILLISECONDS);
+        service.getMetadataRegistry().getAll().forEach(metadata -> {
+            if (metadata.getUID().getItemName().equals(item.getName())) {
+                String seed = uidToSeedMap.get(item.getUID());
+                if (seedToJsonMap.containsKey(seed)) {
+                    /**
+                     * Entries already exists. Updating the value in the json array
+                     */
+                    JsonObject oldEntries = seedToJsonMap.get(seed);
+                    JsonObject newEntries = addToStates(item, newState, oldEntries);
+                    seedToJsonMap.put(seed, newEntries);
+                } else {
+                    /**
+                     * New entry, creating a new json object
+                     */
+                    seedToJsonMap.put(seed,
+                            addToStates(item, newState, new Gson().fromJson("{\"Items\":[]}", JsonObject.class)));
+                }
+                String mode = metadata.getConfiguration().get("mode").toString();
+                Debouncer debouncer = seedToDebouncerMap.get(seed);
+                if (debouncer != null) {
+                    /**
+                     * If several items publish on the same channel, the debounce mechanism bellow
+                     * makes sure the data are published only once if no item has requested an update
+                     * within 1 second
+                     */
+                    debouncer.debounce(IotaItemStateChangeListener.class, new Runnable() {
+                        @Override
+                        public void run() {
+                            String key = mode.equals("restricted") ? seedToPrivateKeyMap.get(seed) : null;
+                            seedToUtilsMap.get(seed).publishState(seedToJsonMap.get(seed).get("Items"), mode, key);
+                        }
+                    }, 1000, TimeUnit.MILLISECONDS);
+                }
+            }
+        });
     }
 
     @Override
     public void stateUpdated(@NonNull Item item, @NonNull State state) {
-        // For testing purpose only: the state hasn't changed but has been updated, publishing again
-        addToStates(item, state);
-        debouncer.debounce(IotaItemStateChangeListener.class, new Runnable() {
-            @Override
-            public void run() {
-                utils.publishState(bridge, inputStates.get("Items"));
-            }
-        }, 500, TimeUnit.MILLISECONDS);
+        /**
+         * Not needed. State has been updated but is no different from the latest push on the Tangle.
+         * Note: for testing purpose, you can call stateChanged(item, state, state) to re-publish
+         * data to the Tangle.
+         */
     }
 
     public void setBridge(IotaAPI bridge) {
@@ -75,21 +108,26 @@ public class IotaItemStateChangeListener implements StateChangeListener {
         }
     }
 
+    public void setService(IotaService service) {
+        this.service = service;
+    }
+
     /**
      * Constructs a JSON object with all item names and states that will be published on the Tangle
      *
      * @param item
      * @param state
      */
-    public synchronized void addToStates(@NonNull Item item, @NonNull State state) {
+    public synchronized JsonObject addToStates(@NonNull Item item, @NonNull State state, JsonObject json) {
+
         JsonObject newState = new JsonObject();
-        if (inputStates.get("Items").getAsJsonArray().size() == 0) {
+        if (json.get("Items").getAsJsonArray().size() == 0) {
             newState.addProperty("Name", item.getName().toString());
             newState.addProperty("State", state.toFullString());
             newState.addProperty("Time", Instant.now().toString());
-            inputStates.get("Items").getAsJsonArray().add(newState);
+            json.get("Items").getAsJsonArray().add(newState);
         } else {
-            for (Iterator<JsonElement> it = inputStates.get("Items").getAsJsonArray().iterator(); it.hasNext();) {
+            for (Iterator<JsonElement> it = json.get("Items").getAsJsonArray().iterator(); it.hasNext();) {
                 JsonElement el = it.next();
                 String name = el.getAsJsonObject().get("Name").toString().replace("\"", "");
                 if (name.equals(item.getName().toString())) {
@@ -100,18 +138,52 @@ public class IotaItemStateChangeListener implements StateChangeListener {
             newState.addProperty("Name", item.getName().toString());
             newState.addProperty("State", state.toFullString());
             newState.addProperty("Time", Instant.now().toString());
-            inputStates.get("Items").getAsJsonArray().add(newState);
+            json.get("Items").getAsJsonArray().add(newState);
+        }
+
+        return json;
+
+    }
+
+    /**
+     * Cleaning json struct: an item has been removed in the Paper UI, therefore its state
+     * will not be published to the Tangle anymore
+     *
+     * @param item
+     */
+    public void removeItemFromJson(@NonNull Item item) {
+
+        String seed = uidToSeedMap.get(item.getUID());
+        if (seed != null && !seed.isEmpty()) {
+            for (Iterator<JsonElement> it = seedToJsonMap.get(seed).get("Items").getAsJsonArray().iterator(); it
+                    .hasNext();) {
+                JsonElement el = it.next();
+                String name = el.getAsJsonObject().get("Name").toString().replace("\"", "");
+                if (name.equals(item.getName().toString())) {
+                    it.remove();
+                }
+            }
         }
     }
 
-    public void removeItemFromJson(@NonNull Item item) {
-        for (Iterator<JsonElement> it = inputStates.get("Items").getAsJsonArray().iterator(); it.hasNext();) {
-            JsonElement el = it.next();
-            String name = el.getAsJsonObject().get("Name").toString().replace("\"", "");
-            if (name.equals(item.getName().toString())) {
-                it.remove();
-            }
-        }
+    public HashMap<String, JsonObject> getSeedToJsonMap() {
+        return seedToJsonMap;
+    }
+
+    public HashMap<String, String> getUidToSeedMap() {
+        return uidToSeedMap;
+    }
+
+    public HashMap<String, Debouncer> getSeedToDebouncerMap() {
+        return seedToDebouncerMap;
+    }
+
+    public HashMap<String, IotaUtils> getSeedToUtilsMap() {
+        return seedToUtilsMap;
+    }
+
+    public HashMap<String, String> getSeedToPrivateKeyMap() {
+        return seedToPrivateKeyMap;
     }
 
 }

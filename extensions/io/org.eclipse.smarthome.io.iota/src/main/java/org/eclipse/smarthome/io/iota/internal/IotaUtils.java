@@ -15,7 +15,6 @@ package org.eclipse.smarthome.io.iota.internal;
 import java.io.IOException;
 
 import org.apache.commons.io.IOUtils;
-import org.eclipse.jdt.annotation.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,13 +31,12 @@ import jota.IotaAPI;
  */
 public class IotaUtils {
 
-    // TODO: cleanup code + retrieve states
+    // TODO: adjust the fetch method to the new implemented mode
 
     private final Logger logger = LoggerFactory.getLogger(IotaUtils.class);
     private static final String PATH = "../../extensions/io/org.eclipse.smarthome.io.iota/src/main/java/org/eclipse/smarthome/io/iota/mam.client.js/example/";
+    private String seed = null;
     private int start = 0;
-    private String seed = "";
-    private String root = "";
     private IotaAPI bridge;
     Process process;
 
@@ -46,8 +44,10 @@ public class IotaUtils {
 
     }
 
-    public IotaUtils(String protocol, String host, int port) {
+    public IotaUtils(String protocol, String host, int port, String seed, int start) {
         this.bridge = new IotaAPI.Builder().protocol(protocol).host(host).port(String.valueOf(port)).build();
+        this.seed = seed;
+        this.start = start;
     }
 
     /**
@@ -57,31 +57,46 @@ public class IotaUtils {
      * @param item the item for which we want to publish data
      * @param state the item's state
      */
-    protected synchronized void publishState(@NonNull IotaAPI bridge, JsonElement jsonElement) {
+    protected void publishState(JsonElement jsonElement, String mode, String key) {
 
-        // Format the states in a json understandable by the official mam explorer
-        // https://mam-explorer.firebaseapp.com/
-        String publish = "{ \n" + jsonElement.toString() + " \n }";
-
+        String payload = jsonElement.toString();
+        String[] param = null;
         JsonParser parser = new JsonParser();
 
-        try {
-            logger.debug("Doing proof of work to attach data to the Tangle....");
-            String[] cmd = start == 0 ? new String[] { "/usr/local/bin/node", PATH + "publishPublic.js",
-                    bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), publish }
-                    : new String[] { "/usr/local/bin/node", PATH + "publishPublic.js",
+        switch (mode) {
+            case "public":
+            case "private":
+                param = new String[] { "/usr/local/bin/node", PATH + "publish.js",
+                        bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), payload,
+                        mode, seed, String.valueOf(start) };
+                break;
+            case "restricted":
+                if (key != null && !key.isEmpty()) {
+                    param = new String[] { "/usr/local/bin/node", PATH + "publish.js",
                             bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
-                            publish, seed, String.valueOf(start) };
-            process = Runtime.getRuntime().exec(cmd);
-            String result = IOUtils.toString(process.getInputStream(), "UTF-8");
-            if (result != null && !result.isEmpty()) {
-                JsonObject json = (JsonObject) parser.parse(result);
-                start = json.getAsJsonPrimitive("START").getAsInt();
-                seed = json.getAsJsonPrimitive("SEED").getAsString();
-                root = json.getAsJsonPrimitive("ROOT").getAsString();
-                logger.debug("Sent: {}", json);
+                            payload, mode, key, seed, String.valueOf(start) };
+                } else {
+                    logger.warn("You must provide a key to use the restricted mode. Aborting");
+                }
+                break;
+            default:
+                logger.warn("This mode is not supported");
+                break;
+        }
+
+        try {
+            if (param != null) {
+                logger.debug("Doing proof of work to attach data to the Tangle.... Processing in mode -- {} -- ", mode);
+                process = Runtime.getRuntime().exec(param);
+                String resultPublic = IOUtils.toString(process.getInputStream(), "UTF-8");
+                if (resultPublic != null && !resultPublic.isEmpty()) {
+                    JsonObject json = (JsonObject) parser.parse(resultPublic);
+                    start = json.getAsJsonPrimitive("START").getAsInt();
+                    seed = json.getAsJsonPrimitive("SEED").getAsString();
+                    logger.debug("Sent: {}", json);
+                }
+                process.waitFor();
             }
-            process.waitFor();
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
@@ -92,16 +107,16 @@ public class IotaUtils {
      *
      * @param bridge the IOTA API endpoint
      */
-    public synchronized String fetchFromTangle(int refresh, String root) {
+    public String fetchFromTangle(int refresh, String root, String mode) {
         JsonParser parser = new JsonParser();
         JsonObject json = new JsonObject();
-        String[] cmd = refresh == 0
-                ? new String[] { "/usr/local/bin/node", PATH + "fetchSync.js",
-                        bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root }
+        String[] cmd = refresh == 0 ? new String[] { "/usr/local/bin/node", PATH + "fetchSync.js",
+                bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root, mode }
                 : new String[] { "/usr/local/bin/node", PATH + "fetchAsync.js",
-                        bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root };
+                        bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root,
+                        mode };
         try {
-            process = Runtime.getRuntime().exec(cmd);
+            Process process = Runtime.getRuntime().exec(cmd);
             String result = IOUtils.toString(process.getInputStream(), "UTF-8");
             if (result != null && !result.isEmpty()) {
                 json = (JsonObject) parser.parse(result);
@@ -119,9 +134,5 @@ public class IotaUtils {
         } else {
             return false;
         }
-    }
-
-    public Process getProcess() {
-        return process;
     }
 }

@@ -12,7 +12,6 @@
  */
 package org.eclipse.smarthome.io.iota.internal;
 
-import java.net.UnknownHostException;
 import java.util.Map;
 
 import org.eclipse.smarthome.config.core.Configuration;
@@ -59,16 +58,12 @@ public class Iota {
         try {
             // Updates the API config
             settings.fill(config);
-            // Updates the listener with the new settings
             service.setSettings(settings);
-        } catch (UnknownHostException e) {
+            service.setBridge(new IotaAPI.Builder().protocol(settings.getProtocol()).host(settings.getHost())
+                    .port(String.valueOf(settings.getPort())).build());
+        } catch (Exception e) {
             logger.debug("Could not initialize IOTA API: {}", e.getMessage());
             return;
-        }
-        try {
-            start();
-        } catch (Exception e) {
-            logger.error("Could not initialize IOTA API: {}", e.getMessage());
         }
     }
 
@@ -76,11 +71,4 @@ public class Iota {
         service.setBridge(null);
         service.stop();
     }
-
-    private void start() {
-        // Set the bridge with the config of the Paper UI
-        service.setBridge(new IotaAPI.Builder().protocol(settings.getProtocol()).host(settings.getHost())
-                .port(String.valueOf(settings.getPort())).build());
-    }
-
 }

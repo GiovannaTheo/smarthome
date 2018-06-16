@@ -19,9 +19,12 @@ import org.eclipse.smarthome.core.items.Item;
 import org.eclipse.smarthome.core.items.ItemNotFoundException;
 import org.eclipse.smarthome.core.items.Metadata;
 import org.eclipse.smarthome.core.items.MetadataRegistry;
+import org.eclipse.smarthome.io.iota.internal.Debouncer;
 import org.eclipse.smarthome.io.iota.internal.IotaItemRegistryListener;
 import org.eclipse.smarthome.io.iota.internal.IotaItemStateChangeListener;
+import org.eclipse.smarthome.io.iota.internal.IotaSeedGenerator;
 import org.eclipse.smarthome.io.iota.internal.IotaSettings;
+import org.eclipse.smarthome.io.iota.internal.IotaUtils;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,12 +46,10 @@ public class IotaService implements RegistryChangeListener<Metadata> {
     private IotaItemRegistryListener itemListener;
     private IotaSettings settings;
     private final IotaItemStateChangeListener stateListener = new IotaItemStateChangeListener();
+    private final IotaSeedGenerator seedGenerator = new IotaSeedGenerator();
+    private IotaAPI bridge;
 
-    /**
-     *
-     * ItemRegistryChangeListener impl
-     *
-     */
+    @SuppressWarnings("unused")
     @Override
     public void added(Metadata element) {
         /**
@@ -56,14 +57,74 @@ public class IotaService implements RegistryChangeListener<Metadata> {
          */
         Item item;
         try {
+            stateListener.setService(this);
             if (CollectionUtils.isNotEmpty(itemListener.getItemRegistry().getAll())) {
                 item = itemListener.getItemRegistry().getItem(element.getUID().getItemName());
                 if (item instanceof GenericItem) {
-                    if (element.getValue().equals("yes")) {
-                        logger.debug("Iota state listener added for item: {}", item.getName());
-                        ((GenericItem) item).addStateChangeListener(stateListener);
-                        // publish the new item's state
-                        stateListener.stateUpdated(item, item.getState());
+                    if (element.getValue() != null) {
+                        if (element.getValue().equals("yes")) {
+                            if (!element.getConfiguration().isEmpty()) {
+
+                                /**
+                                 * Adds a new entry in the hashmap: maps the item UID to a specific seed on
+                                 * which messages will be broadcasted. Either a new one is created, or an
+                                 * existing one is used. If a new seed is used, a corresponding debouncing instance
+                                 * and utils instance are created.
+                                 */
+
+                                String seed;
+                                if (element.getConfiguration().get("seed") == null) {
+                                    logger.debug("A new seed will be generated for item {}", item.getUID());
+                                    seed = seedGenerator.getNewSeed();
+                                    updateMaps(item, seed);
+                                    element.getConfiguration().put("seed", seed);
+                                } else {
+                                    logger.debug("An existing seed will be used for item {}", item.getUID());
+
+                                    /**
+                                     * Uses an existing seed to publish this item states
+                                     */
+
+                                    seed = element.getConfiguration().get("seed").toString();
+                                    if (seed != null && !seed.isEmpty() && seed.length() == 81) {
+                                        stateListener.getUidToSeedMap().put(item.getUID(), seed.toString());
+                                        updateMaps(item, seed);
+                                    } else {
+                                        logger.debug("Invalid seed for item {}. Generating a new one", item.getUID());
+                                        seed = seedGenerator.getNewSeed();
+                                        updateMaps(item, seed);
+                                        element.getConfiguration().put("seed", seed);
+                                    }
+                                }
+
+                                /**
+                                 * If restricted mode was selected, the private key is saved, otherwise generated.
+                                 */
+
+                                if (element.getConfiguration().get("mode").equals("restricted") && !seed.isEmpty()) {
+                                    if (element.getConfiguration().get("key") != null) {
+                                        logger.debug("An existing key will be used for item {}", item.getUID());
+                                        String inputKey = element.getConfiguration().get("key").toString();
+                                        if (inputKey != null && !inputKey.isEmpty()) {
+                                            stateListener.getSeedToPrivateKeyMap().put(seed, inputKey);
+                                        }
+                                    } else {
+                                        logger.debug("Invalid key for item {}. Generating a new one", item.getUID());
+                                        String key = seedGenerator.getNewPrivateKey();
+                                        stateListener.getSeedToPrivateKeyMap().put(seed, key);
+                                        element.getConfiguration().put("key", key);
+                                    }
+                                }
+
+                                logger.debug("Iota state listener added for item: {}", item.getName());
+                                ((GenericItem) item).addStateChangeListener(stateListener);
+
+                                /**
+                                 * Publish the state
+                                 */
+                                stateListener.stateChanged(item, item.getState(), item.getState());
+                            }
+                        }
                     }
                 }
             }
@@ -93,21 +154,23 @@ public class IotaService implements RegistryChangeListener<Metadata> {
     }
 
     /**
+     * Updates the hashmaps in the {@link IotaStateListener} class.
      *
-     * MetadataRegistry impl
-     *
+     * @param item
+     * @param seed
      */
+    public void updateMaps(Item item, String seed) {
+        stateListener.getUidToSeedMap().put(item.getUID(), seed);
+        stateListener.getSeedToDebouncerMap().put(seed, new Debouncer());
+        stateListener.getSeedToUtilsMap().put(seed,
+                new IotaUtils(bridge.getProtocol(), bridge.getHost(), Integer.parseInt(bridge.getPort()), seed, 0));
+    }
 
     public void setMetadataRegistry(MetadataRegistry metadataRegistry) {
         this.metadataRegistry = metadataRegistry;
         this.metadataRegistry.addRegistryChangeListener(this);
     }
 
-    /**
-     *
-     * IOTA Services
-     *
-     */
     public void stop() {
         if (metadataRegistry != null) {
             metadataRegistry.getAll().forEach(metadata -> removed(metadata));
@@ -136,7 +199,6 @@ public class IotaService implements RegistryChangeListener<Metadata> {
     }
 
     public void setBridge(IotaAPI bridge) {
-        stateListener.setBridge(bridge);
+        this.bridge = bridge;
     }
-
 }

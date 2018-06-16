@@ -4,15 +4,40 @@ const iota = new IOTA({ provider: process.argv[2] })
 
 // Initialise MAM State
 let mamState = Mam.init(iota)
+var resp = undefined
 
-// Publish to tangle
+// Fetch from the tangle
 
 async function fetch () {
 
-    var resp = await Mam.fetch(process.argv[3], 'public')
+    switch (process.argv[4]) {
+    case 'public':
+        resp = await Mam.fetch(process.argv[3], 'public', null)
+        break
+    case 'private':
+        resp = await Mam.fetch(process.argv[3], 'private', null)
+        break
+    case 'restricted':
+        resp = await Mam.fetch(process.argv[3], 'restricted', process.argv[5].toUpperCase(), null)
+        break
+    default:
+        console.log("Unsupported command")
+	}
     
     while (resp.messages.length === 0){
-        resp = await Mam.fetch(process.argv[3], 'public')
+        switch (process.argv[4]) {
+	    case 'public':
+	        resp = await Mam.fetch(process.argv[3], 'public', null)
+	        break
+	    case 'private':
+	        resp = await Mam.fetch(process.argv[3], 'private', null)
+	        break
+	    case 'restricted':
+	        resp = await Mam.fetch(process.argv[3], 'restricted', process.argv[5].toUpperCase(), null)
+	        break
+	    default:
+	        console.log("Unsupported command")
+		}
     }
     
     console.log(

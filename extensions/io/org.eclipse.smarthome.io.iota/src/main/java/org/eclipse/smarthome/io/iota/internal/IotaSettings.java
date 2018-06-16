@@ -31,23 +31,13 @@ public class IotaSettings {
     private String host = "nodes.testnet.iota.org";
     private final Logger logger = LoggerFactory.getLogger(IotaSettings.class);
 
-    /**
-     * Adapted from org.openhab.io.homekit.internal
-     *
-     * @author Andy Lintner
-     */
     public void fill(IotaApiConfiguration config) throws UnknownHostException {
-        logger.debug("---------------------------------- UPDATING SETTINGS FOR IOTA API");
+        logger.debug("Updating settings for IOTA API...");
         setHost(getOrDefault(config.getHost(), getHost()));
         setProtocol(getOrDefault(config.getProtocol(), getProtocol()));
         setPort(getOrDefault(config.getPort(), getPort()));
     }
 
-    /**
-     * Taken from org.openhab.io.homekit.internal
-     *
-     * @author Andy Lintner
-     */
     private static String getOrDefault(Object value, String defaultValue) {
         return value != null ? (String) value : defaultValue;
     }

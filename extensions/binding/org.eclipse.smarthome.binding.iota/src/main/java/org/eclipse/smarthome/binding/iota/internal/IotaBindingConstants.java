@@ -29,7 +29,4 @@ public class IotaBindingConstants {
     // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_IOTASTATE = new ThingTypeUID(BINDING_ID, "iotaState");
 
-    public static final String CHANNEL_HUMIDITY = "humidity";
-    public static final String CHANNEL_TEMPERATURE = "temperature";
-    public static final String CHANNEL_PRESSURE = "pressure";
 }
