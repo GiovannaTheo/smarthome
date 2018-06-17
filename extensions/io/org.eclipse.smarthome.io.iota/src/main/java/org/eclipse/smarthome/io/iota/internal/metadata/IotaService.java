@@ -65,6 +65,8 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                         if (element.getValue().equals("yes")) {
                             if (!element.getConfiguration().isEmpty()) {
 
+                                logger.debug("----------- METADATA: {}", element);
+
                                 /**
                                  * Adds a new entry in the hashmap: maps the item UID to a specific seed on
                                  * which messages will be broadcasted. Either a new one is created, or an

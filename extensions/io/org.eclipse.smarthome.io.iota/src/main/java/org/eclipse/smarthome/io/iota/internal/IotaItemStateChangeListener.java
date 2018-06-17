@@ -37,7 +37,6 @@ import jota.dto.response.GetNodeInfoResponse;
  * Each item wishing to publish its state on the Tangle has a seed associated to its UID.
  * A custom seed may be given to some item. This way, any ESH instance is able to select
  * which item's state to share on which channel.
- * Note: it is yet not possible for an item to share its state on multiple channels.
  *
  * @author Theo Giovanna - Initial Contribution
  */

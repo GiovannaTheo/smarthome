@@ -67,6 +67,14 @@ Using this add-on, you will be able to configure for each \textit{Thing} of your
 	\item \texttt{value:} \textit{"no"} | \texttt{label:} \textit{"Don't share the item's state with the Tangle"}
 \end{itemize} 
 
+\noindent The \textit{"yes"} value allows for some more fine tuning:
+
+\begin{itemize}
+	\item \texttt{param:} \textit{"mode"} | \texttt{public, private, restricted}
+	\item \texttt{param:} \textit{"key"} | \texttt{Optional key for restricted mode}
+	\item \texttt{param:} \textit{"seed"} | \texttt{Optional seed. Allows one to publish on an existing channel}
+\end{itemize}
+
 \bigskip
 
 \noindent For information about what \textit{Things}, \textit{Channels} and \textit{Items} are, please refer to the official \textcolor{blue}{\underline{\href{https://www.eclipse.org/smarthome/documentation/index.html}{ESH documentation}}}. To be able to configure metadata for your items, you must ensure that the option \texttt{Simple Mode} under \texttt{Configuration > System > Item Linking} is turned off.
@@ -101,8 +109,6 @@ The basic idea behind this add-on is to use the Tangle capabilities in order to 
 
 \subsubsection{Publishing an item's state to the Tangle}
 
-% TODO: Explain MAM
-
 The iota add-on implements several interfaces from ESH, some of which are enumerated and explained below:
 
 \begin{itemize}
@@ -118,8 +124,9 @@ The iota add-on implements several interfaces from ESH, some of which are enumer
 
 \begin{center}
 \begin{tcolorbox}
-\textcolor{TypeItem}{Number}\textcolor{white}{:}\textcolor{TypeItem}{Temperature} \textcolor{NameItem}{Weather\_Temperature} \textcolor{DescriptionItem}{"OutsideTemperature[\%.1f\degree C]"}\textcolor{GroupItem}{$<$temperature$>$} \textcolor{FuncItem}{(Weather\_Chart)} \textcolor{white}{\{iota=}\textcolor{DescriptionItem}{"yes"}\textcolor{white}{,} \textcolor{white}{channel=} \textcolor{DescriptionItem}{"yahooweather:weather:berlin:temperature"} \textcolor{white}{\}}
+\textcolor{TypeItem}{Number}\textcolor{white}{:}\textcolor{TypeItem}{Temperature} \textcolor{NameItem}{Weather\_Temperature} \textcolor{DescriptionItem}{"OutsideTemperature[\%.1f\degree C]"}\textcolor{GroupItem}{$<$temperature$>$} \textcolor{FuncItem}{(Weather\_Chart)} \textcolor{white}{\{iota=}\textcolor{DescriptionItem}{"yes"} \textcolor{white}{[mode=}\textcolor{DescriptionItem}{"public"}\textcolor{white}{,} \textcolor{white}{seed=}\textcolor{DescriptionItem}{"yourSeed"}\textcolor{white}{,} \textcolor{white}{key=}\textcolor{DescriptionItem}{"null"}\textcolor{white}{]}\textcolor{white}{,} \\ \textcolor{white}{channel=} \textcolor{DescriptionItem}{"yahooweather:weather:berlin:temperature"} \textcolor{white}{\}}
 \end{tcolorbox}
+
 \end{center}
 
 \noindent And in \texttt{demo.things}:
@@ -130,17 +137,15 @@ The iota add-on implements several interfaces from ESH, some of which are enumer
 \end{tcolorbox}
 \end{center}
 
-\noindent Since we defined the metadata \texttt{"iota=yes"}, the add-on will detect it and associate a state listener to this item. From now on, every update of this item will be detected and pushed on the Tangle. In MAM, the first transaction emitted has a \texttt{Root} address. Any sub-sequent message (i.e. any new update on the item's state) will be published on the \texttt{NextRoot} address, which is contained in any transaction retrieved from MAM. In other words, a publisher will start emitting his data on the Tangle, through MAM, given a Root address. This root address will be used by any subscriber that wishes to listen to the publisher. In the first message that they retrieve, they will find, along the data, a new address (the NextRoot) which tells them where to look for the next message. In the next message, they'll be given a new NextRoot address, for the next update, and so on. Given the first \texttt{root} address, or any \texttt{nextRoot} address that follows, one can see all the states shared from this address onward using the \textcolor{blue}{\underline{\href{https://mam-explorer.firebaseapp.com/}{official MAM-Explorer}}}. For instance:
+\noindent MAM allows for three different publishing modes: \texttt{public, private, restricted}. These options can be configured in PaperUI through metadata. More information on what achieves each mode can be found in the blog link given above. Each item may also be published on a given MAM channel, through \textit{seeds}. In such scenario, the flow is as follow: let $X$ be an ESH instance with items $A, B, C, D$. Let $Y$ and $Z$ be to other ESH instances. $X$ may choose to share on a \texttt{public, private or restricted} channel $A$ and $B$'s state with $Y$. Therefore, all states will be published on seed $s_0$ with root $r_0$. Now, $X$ may also choose to share with $Z$ on a separate channel (\texttt{public, private or restricted}) $C$ and $D$'s state, on seed $s_1$. $X$ is now broadcasting data on two different channels, each belonging to a seed: $s_0, s_1$. To add new item's state to any of these streams, say the first one broadcasting to $Y$, $X$ just has to configure a new item's metadata with the seed he's using for $Y$, in this case $s_0$. \\ 
+
+\noindent In the previously defined item, we defined the metadata \texttt{"iota=yes"} with several parameters. The add-on will detect it and associate a state listener to this item. From now on, every update of this item will be detected and pushed on the Tangle. In MAM, the first transaction emitted has a \texttt{Root} address, which is derived from the \textbf{seed}. Any sub-sequent message (i.e. any new update on the item's state) will be published on the \texttt{NextRoot} address, which is contained in any transaction retrieved from MAM. Given the first \texttt{root} address, or any \texttt{nextRoot} address that follows, one can see all the states shared from this address onward using the \textcolor{blue}{\underline{\href{https://mam-explorer.firebaseapp.com/}{official MAM-Explorer}}}. For instance:
 
 \begin{figure}[H]
   \center
   \includegraphics[scale=0.50]{images/mam_retrieve.png}
   \captionof{figure}{Retrieving item states through MAM}
 \end{figure}
-
-\newpage
-
-\subsubsection{Retrieving an item's state from the Tangle}   
 
 \newpage 
 
@@ -239,6 +244,9 @@ public class IotaItemRegistryListener implements ItemRegistryChangeListener {
 \begin{minted}[frame=single,framesep=10pt]{java}
 /**
  * Listens for changes to the state of registered items.
+ * Each item wishing to publish its state on the Tangle has a seed associated to its 
+ * UID. A custom seed may be given to some item. This way, any ESH instance is able 
+ * to select which item's state to share on which channel.
  * @author Theo Giovanna - Initial Contribution
  */
 public class IotaItemStateChangeListener implements StateChangeListener {
@@ -256,6 +264,12 @@ public class IotaItemStateChangeListener implements StateChangeListener {
 	 */
 	 public synchronized void addToStates(@NonNull Item item, 
 	 @NonNull State state) {}
+	 
+	 /**
+	 * Cleaning json struct: an item has been removed in the Paper UI, therefore 
+	 * its state will not be published to the Tangle anymore
+	 */
+	 public void removeItemFromJson(@NonNull Item item) {}
 
 }
 \end{minted}
@@ -294,6 +308,11 @@ public class IotaService implements RegistryChangeListener<Metadata> {
 	public void removed(Metadata element) {}
 	public void updated(Metadata oldElement, Metadata element) {}
 	
+	/**
+	* Updates the hashmaps in the {@link IotaStateListener} class.
+	*/
+	public void updateMaps(Item item, String seed) {}
+    
 	/**
 	 * Add a registry change listener
 	 */
@@ -342,13 +361,18 @@ public class IotaUtils {
 	/**
 	 * Attach an item's state to the Tangle
 	 */
-	protected void publishState(@NonNull IotaAPI bridge, @NonNull Item item, 
-	State state) {}
+	protected void publishState(JsonElement jsonElement, String mode, 
+	String key) {}
 	
 	/**
 	 * Retrieve an item state from the Tangle, through MAM
 	 */
-	 protected synchronized JsonObject getItemState(@NonNull IotaAPI bridge) {}
+	 public String fetchFromTangle(int refresh, String root, String mode) {}
+	 
+	 /**
+	  * Checks the IOTA API
+	  */
+	  public boolean checkAPI() {}
 
 	
 }
