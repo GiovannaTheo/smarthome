@@ -1,28 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <thing:thing-descriptions xmlns:thing="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" bindingId="iota" xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
    <!-- IOTA Binding -->
-   <thing-type id="iotaState">
-      <label>Item States</label>
-      <description>Provide item states that are shared on the Tangle</description>
+   <thing-type id="topic" extensible="text,number,percentage,onoff">
+      <supported-bridge-type-refs>
+          <bridge-type-ref id="bridge"/>
+      </supported-bridge-type-refs>
+      <label>Topic</label>
+      <description>This thing represents a topic</description>
       <channels>
          <channel id="mamState" typeId="mamState" />
       </channels>
       <config-description>
-         <parameter name="host" type="text" required="true">
-            <label>Node's host</label>
-            <description>Defines the host used by IOTA API</description>
-            <default>nodes.testnet.iota.org</default>
-         </parameter>
-         <parameter name="protocol" type="text" required="true">
-            <label>Node's protocol</label>
-            <description>Defines the protocol used by IOTA API</description>
-            <default>https</default>
-         </parameter>
-         <parameter name="port" type="integer" required="true">
-            <label>Node's port</label>
-            <description>Defines the port used by IOTA API</description>
-            <default>443</default>
-         </parameter>
          <parameter name="root" type="text" required="true">
             <label>Root Address</label>
             <description>The root address from which item states should be retrieved from</description>
@@ -31,12 +19,115 @@
             <label>Refresh interval</label>
             <description>Specifies the refresh interval in seconds.</description>
          </parameter>
+         <parameter name="mode" type="text" required="true">
+            <options>
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+                <option value="restricted">Restricted</option>
+            </options>
+            <label>MAM Mode</label>
+            <description>The mode of the channel on which to fetch data</description>
+        </parameter>
       </config-description>
    </thing-type>
-   <channel-type id="mamState">
-      <item-type>Number</item-type>
-      <label>State</label>
-      <description>Current state value of the shared item</description>
-      <state readOnly="true" />
-   </channel-type>
+   
+   <channel-type id="text">
+        <item-type>String</item-type>
+        <label>Text value</label>
+        <config-description>
+            <parameter name="stateTopic" type="text">
+                <label>IOTA state topic</label>
+                <description>An IOTA topic that this thing will subscribe to, to receive the state. This can be left empty, the thing will be state-less then.</description>
+                <default></default>
+            </parameter>
+        </config-description>
+    </channel-type>
+
+    <channel-type id="number">
+        <item-type>Number</item-type>
+        <label>Number value</label>
+        <config-description>
+            <parameter name="stateTopic" type="text">
+                <label>IOTA state topic</label>
+                <description>An IOTA topic that this thing will subscribe to, to receive the state. This can be left empty, the thing will be state-less then.</description>
+                <default></default>
+            </parameter>
+
+            <parameter name="step" type="decimal">
+                <label>Step value</label>
+                <description>The step value is used if the value channel is bound to a Dimmer item and an increase/decrease is issued</description>
+                <default>10.0</default>
+            </parameter>
+            <parameter name="isfloat" type="boolean">
+                <label>Is Decimal?</label>
+                <description>Set to true if the IOTA topic expects a float/double decimal instead of an integer value</description>
+                <default>false</default>
+            </parameter>
+        </config-description>
+    </channel-type>
+
+    <channel-type id="percentage">
+        <item-type>Dimmer</item-type>
+        <label>Percentage value</label>
+        <config-description>
+            <parameter name="stateTopic" type="text">
+                <label>IOTA state topic</label>
+                <description>An IOTA topic that this thing will subscribe to, to receive the state. This can be left empty, the thing will be state-less then.</description>
+                <default></default>
+            </parameter>
+
+            <parameter name="min" type="decimal">
+                <label>Minimum value</label>
+                <description>Minimum value to convert the IOTA state to a percentage</description>
+                <default>0.0</default>
+            </parameter>
+            <parameter name="max" type="decimal">
+                <label>Maximum value</label>
+                <description>Maximum value to convert the IOTA state to a percentage</description>
+                <default>100.0</default>
+            </parameter>
+            <parameter name="step" type="decimal">
+                <label>Step value</label>
+                <description>The step value is used if the value channel is bound to a Dimmer item and an increase/decrease is issued</description>
+                <default>10.0</default>
+            </parameter>
+            <parameter name="isfloat" type="boolean">
+                <label>Is Decimal?</label>
+                <description>Set to true if the IOTA topic expects a float/double decimal instead of an integer value</description>
+                <default>false</default>
+            </parameter>
+        </config-description>
+    </channel-type>
+
+    <channel-type id="onoff">
+        <item-type>Switch</item-type>
+        <label>On/Off value</label>
+        <config-description>
+            <parameter name="stateTopic" type="text">
+                <label>IOTA state topic</label>
+                <description>An IOTA topic that this thing will subscribe to, to receive the state. This can be left empty, the thing will be state-less then.</description>
+                <default></default>
+            </parameter>
+
+            <parameter name="on" type="text">
+                <label>ON value</label>
+                <description>A number (like 1, 10) or a string (like ON) that is recognised as on state.</description>
+                <default>0</default>
+                <advanced>true</advanced>
+            </parameter>
+            <parameter name="off" type="text">
+                <label>OFF value</label>
+                <description>A number (like 0, -10) or a string (like OFF) that is recognised as off state.</description>
+                <default>1</default>
+                <advanced>true</advanced>
+            </parameter>
+            <parameter name="inverse" type="boolean">
+                <label>Inverse</label>
+                <description>Inverse the meaning. A received "ON" will switch the thing channel off and vice versa.</description>
+                <default>false</default>
+                <advanced>true</advanced>
+            </parameter>
+        </config-description>
+    </channel-type>
+    
 </thing:thing-descriptions>

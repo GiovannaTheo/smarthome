@@ -13,12 +13,12 @@
 package org.eclipse.smarthome.binding.iota;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.MockitoAnnotations.initMocks;
 
-import org.eclipse.smarthome.binding.iota.internal.IotaHandler;
+import org.eclipse.smarthome.binding.iota.handler.IotaThingHandler;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusInfo;
@@ -47,7 +47,7 @@ public class IotaHandlerTest {
     @Before
     public void setUp() {
         initMocks(this);
-        handler = new IotaHandler(thing);
+        handler = new IotaThingHandler(thing);
         handler.setCallback(callback);
     }
 

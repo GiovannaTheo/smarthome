@@ -44,6 +44,10 @@ public class IotaUtils {
 
     }
 
+    public IotaUtils(String protocol, String host, int port) {
+        this.bridge = new IotaAPI.Builder().protocol(protocol).host(host).port(String.valueOf(port)).build();
+    }
+
     public IotaUtils(String protocol, String host, int port, String seed, int start) {
         this.bridge = new IotaAPI.Builder().protocol(protocol).host(host).port(String.valueOf(port)).build();
         this.seed = seed;

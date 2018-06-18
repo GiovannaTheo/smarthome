@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.eclipse.smarthome.binding.iota.internal;
+package org.eclipse.smarthome.binding.iota.handler;
 
 /**
  * The {@link IotaConfiguration} class contains fields mapping thing configuration parameters.
@@ -20,14 +20,13 @@ package org.eclipse.smarthome.binding.iota.internal;
 public class IotaConfiguration {
 
     public static final String ROOT_ADDRESS = "root";
-    public static final String PROTOCOL = "protocol";
-    public static final String HOST = "host";
-    public static final String PORT = "port";
     public static final String REFRESH_INTERVAL = "refresh";
+    public static final String MODE = "mode";
 
     public String root;
     public String protocol;
     public String host;
     public int port;
     public int refresh;
+    public String mode;
 }
