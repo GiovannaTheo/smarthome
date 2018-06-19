@@ -7,9 +7,6 @@
       </supported-bridge-type-refs>
       <label>Topic</label>
       <description>This thing represents a topic</description>
-      <channels>
-         <channel id="mamState" typeId="mamState" />
-      </channels>
       <config-description>
          <parameter name="root" type="text" required="true">
             <label>Root Address</label>
@@ -28,6 +25,10 @@
             <label>MAM Mode</label>
             <description>The mode of the channel on which to fetch data</description>
         </parameter>
+        <parameter name="key" type="text" required="false">
+            <label>Private Key</label>
+            <description>Leave blank for non-restricted mode, otherwise enter the private key you want to use</description>
+         </parameter>
       </config-description>
    </thing-type>
    
@@ -39,6 +40,12 @@
                 <label>IOTA state topic</label>
                 <description>An IOTA topic that this thing will subscribe to, to receive the state. This can be left empty, the thing will be state-less then.</description>
                 <default></default>
+            </parameter>
+            <parameter name="transformationPattern" type="text">
+                <label>Transformation pattern</label>
+                <description>Any supported transformation can be used. An example for a received JSON from a IOTA state topic would be a pattern of JSONPATH:$.thingNumber.status.state for a json [{"NAME": name, "STATUS": { "TOPIC": topic, "STATE": state, "TIME": time }}].</description>
+                <default></default>
+                <advanced>true</advanced>
             </parameter>
         </config-description>
     </channel-type>
@@ -52,7 +59,13 @@
                 <description>An IOTA topic that this thing will subscribe to, to receive the state. This can be left empty, the thing will be state-less then.</description>
                 <default></default>
             </parameter>
-
+            <parameter name="transformationPattern" type="text">
+                <label>Transformation pattern</label>
+                <description>Any supported transformation can be used. An example for a received JSON from a IOTA state topic would be a pattern of JSONPATH:$.thingNumber.status.state for a json [{"NAME": name, "STATUS": { "TOPIC": topic, "STATE": state, "TIME": time }}].</description>
+                <default></default>
+                <advanced>true</advanced>
+            </parameter>
+            
             <parameter name="step" type="decimal">
                 <label>Step value</label>
                 <description>The step value is used if the value channel is bound to a Dimmer item and an increase/decrease is issued</description>
@@ -74,6 +87,12 @@
                 <label>IOTA state topic</label>
                 <description>An IOTA topic that this thing will subscribe to, to receive the state. This can be left empty, the thing will be state-less then.</description>
                 <default></default>
+            </parameter>
+            <parameter name="transformationPattern" type="text">
+                <label>Transformation pattern</label>
+                <description>Any supported transformation can be used. An example for a received JSON from a IOTA state topic would be a pattern of JSONPATH:$.thingNumber.status.state for a json [{"NAME": name, "STATUS": { "TOPIC": topic, "STATE": state, "TIME": time }}].</description>
+                <default></default>
+                <advanced>true</advanced>
             </parameter>
 
             <parameter name="min" type="decimal">
@@ -107,6 +126,12 @@
                 <label>IOTA state topic</label>
                 <description>An IOTA topic that this thing will subscribe to, to receive the state. This can be left empty, the thing will be state-less then.</description>
                 <default></default>
+            </parameter>
+            <parameter name="transformationPattern" type="text">
+                <label>Transformation pattern</label>
+                <description>Any supported transformation can be used. An example for a received JSON from a IOTA state topic would be a pattern of JSONPATH:$.thingNumber.status.state for a json [{"NAME": name, "STATUS": { "TOPIC": topic, "STATE": state, "TIME": time }}].</description>
+                <default></default>
+                <advanced>true</advanced>
             </parameter>
 
             <parameter name="on" type="text">

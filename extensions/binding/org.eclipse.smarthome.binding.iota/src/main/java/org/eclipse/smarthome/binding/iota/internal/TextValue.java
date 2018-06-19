@@ -21,10 +21,10 @@ import org.eclipse.smarthome.core.types.State;
  * @author David Graeff - Initial contribution
  */
 public class TextValue implements AbstractIotaThingValue {
-    private StringType strValue;
+    private StringType strValue = null;
 
     public TextValue() {
-        strValue = new StringType();
+
     }
 
     public TextValue(String text) {

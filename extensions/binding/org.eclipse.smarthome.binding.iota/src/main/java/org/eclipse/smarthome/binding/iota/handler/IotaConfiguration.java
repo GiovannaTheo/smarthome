@@ -22,11 +22,10 @@ public class IotaConfiguration {
     public static final String ROOT_ADDRESS = "root";
     public static final String REFRESH_INTERVAL = "refresh";
     public static final String MODE = "mode";
+    public static final String PRIVATE_KEY = "key";
 
     public String root;
-    public String protocol;
-    public String host;
-    public int port;
     public int refresh;
     public String mode;
+    public String key;
 }

@@ -23,14 +23,13 @@ import org.eclipse.smarthome.core.types.State;
  * @author David Graeff - Initial contribution
  */
 public class NumberValue implements AbstractIotaThingValue {
-    private DecimalType numberValue;
+    private DecimalType numberValue = null;
     private final boolean isFloat;
     private final double step;
 
     public NumberValue(Boolean isFloat, BigDecimal step) {
         this.isFloat = isFloat == null ? true : isFloat;
         this.step = step == null ? 1.0 : step.doubleValue();
-        numberValue = new DecimalType();
     }
 
     @Override

@@ -60,13 +60,12 @@ public class IotaMetadataProvider implements MetadataConfigDescriptionProvider {
         switch (value) {
             case "yes":
                 return Stream.of( //
-                        create("mode", Type.TEXT).withLabel("Mode").withDefault("public").withLimitToOptions(true)
-                                .withOptions( //
-                                        Stream.of( //
-                                                new ParameterOption("public", "Public"), //
-                                                new ParameterOption("private", "Private"), //
-                                                new ParameterOption("restricted", "Restricted") //
-                                        ).collect(toList())).build(), //
+                        create("mode", Type.TEXT).withLabel("Mode").withLimitToOptions(true).withOptions( //
+                                Stream.of( //
+                                        new ParameterOption("public", "Public"), //
+                                        new ParameterOption("private", "Private"), //
+                                        new ParameterOption("restricted", "Restricted") //
+                                ).collect(toList())).build(), //
                         create("key", Type.TEXT).withLabel("Private Key").withDescription(
                                 "Leave blank for non-restricted mode, otherwise enter the private key you want to use")
                                 .build(), //

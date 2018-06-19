@@ -1,52 +1,67 @@
-# <bindingName> Binding
+# IOTA Binding
 
-_Give some details about what this binding is meant for - a protocol, system, specific device._
+This binding allows to bind a IOTA topic to a Thing. A bridge connection needs to be already defined, i.e you first need to create an IOTA bridge thing.
+The way this binding works is heavily inspired by the MQTT generic binding that maps JSON data to channels.
 
-_If possible, provide some resources like pictures, a YouTube video, etc. to give an impression of what can be done with this binding. You can place such resources into a `doc` folder next to this README.md._
+## Supported Bridge
 
-## Supported Things
+* **IOTA BRIDGE**: This bridge represents an instance that connects to an IOTA node. 
 
-_Please describe the different supported things / devices within this section._
-_Which different types are supported, which models were tested etc.?_
-_Note that it is planned to generate some part of this based on the XML files within ```ESH-INF/thing``` of your binding._
+## Supported Thing
 
-## Discovery
+There is one thing available ("topic"), where you can add the following channels to:
 
-_Describe the available auto-discovery features here. Mention for what it works and what needs to be kept in mind when using it._
+## Supported Channels
 
-## Binding Configuration
+* **text**: This channel can show the received text on the given topic.
+* **number**: This channel can show the received number on the given topic. It can have a min, max and step values.
+* **percentage**: This channel handles numeric values as percentages. It can have a min, max and step values.
+* **onoff**: This channel represents a on/off state of a given topic.
 
-_If your binding requires or supports general configuration settings, please create a folder ```cfg``` and place the configuration file ```<bindingId>.cfg``` inside it. In this section, you should link to this file and provide some information about the options. The file could e.g. look like:_
+## Thing and Channel configuration
 
-```
-# Configuration for the Philips Hue Binding
-#
-# Default secret key for the pairing of the Philips Hue Bridge.
-# It has to be between 10-40 (alphanumeric) characters 
-# This may be changed by the user for security reasons.
-secret=EclipseSmartHome
-```
+The bridge only needs a **protocol**, **host** and **port**. A thing offers a few parameters for the configuration: the frequence at which it refreshes the data, the mode it uses for MAM, and the root address from which to start fetching the data. 
 
-_Note that it is planned to generate some part of this based on the information that is available within ```ESH-INF/binding``` of your binding._
+All thing channels support JSON/XML unpacking: Usually a IOTA topic state represents a plain value like a text or a number.
 
-_If your binding does not offer any generic configurations, you can remove this section completely._
+### Common channel configuration parameters
 
-## Thing Configuration
+* __stateTopic__: The IOTA topic that represents the state of the thing. For instance, if you're tracking a sensor that sends humidity related data on IOTA's distributed ledger through the io.iota bundle, the stateTopic will be **humidity**. 
 
-_Describe what is needed to manually configure a thing, either through the (Paper) UI or via a thing-file. This should be mainly about its mandatory and optional configuration parameters. A short example entry for a thing file can help!_
+### Work In Progress:
 
-_Note that it is planned to generate some part of this based on the XML files within ```ESH-INF/thing``` of your binding._
+* __transformationPattern__: An optional transformation pattern like [JSONPath](http://goessner.net/articles/JsonPath/index.html#e2). Use http://jsonpath.com/ to verify your pattern for the latter case. An example for a received JSON from a IOTA state topic would be a pattern of JSONPATH:$.thingNumber.status.state for a json `[{"NAME": name, "STATUS": { "TOPIC": topic, "STATE": state, "TIME": time }}]` to extract the temperature value.
 
-## Channels
 
-_Here you should provide information about available channel types, what their meaning is and how they can be used._
+ 
+### Channel Type "number"
+ 
+* __min__: A minimum value, necessary if the thing channel is used as a Rollershutter or Dimmer.
+* __max__: A maximum value, necessary if the thing channel is used as a Rollershutter or Dimmer.
+* __step__: Because Rollershutter and Dimmer can send decrease, increase commands, we need to know the step.
+* __isfloat__: If set to true the value is send as a decimal value, otherwise it is send as integer.
 
-_Note that it is planned to generate some part of this based on the XML files within ```ESH-INF/thing``` of your binding._
+If any of the parameters is a float/double (has a decimal point value), then a float value is send to the IOTA topic otherwise an int value is send.
 
-## Full Example
+You can connect this channel to a Number item.
 
-_Provide a full usage example based on textual configuration files (*.things, *.items, *.sitemap)._
+### Channel Type "percentage"
+ 
+* __min__: A minimum value, necessary if the thing channel is used as a Rollershutter or Dimmer.
+* __max__: A maximum value, necessary if the thing channel is used as a Rollershutter or Dimmer.
+* __step__: Because Rollershutter and Dimmer can send decrease, increase commands, we need to know the step.
+* __isfloat__: If set to true the value is send as a decimal value, otherwise it is send as integer.
 
-## Any custom content here!
+If any of the parameters is a float/double (has a decimal point value), then a float value is send to the IOTA topic otherwise an int value is send.
 
-_Feel free to add additional sections for whatever you think should also be mentioned about your binding!_
+You can connect this channel to a Rollershutter or Dimmer item.
+
+### Channel Type "onoff"
+
+* __on__: A number (like 1, 10) or a string (like ON) that is recognized as on state.
+* __off__: A number (like 0, -10) or a string (like OFF) that is recognized as off state.
+* __inverse__: Inverse the meaning. A received "ON" will switch the thing channel off and vice versa.
+
+The thing by default always recognizes `"ON"`,`"1"`, `1` as on state and `"OFF"`, `"0"`, `0` as off state and if **on** and **off** are not configured it sends the integer values `1` for on and `0` for off.
+
+You can connect this channel to a Contact or Switch item.

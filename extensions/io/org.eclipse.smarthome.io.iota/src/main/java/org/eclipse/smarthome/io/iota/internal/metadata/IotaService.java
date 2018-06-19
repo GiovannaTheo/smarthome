@@ -79,16 +79,14 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                     updateMaps(item, seed);
                                     element.getConfiguration().put("seed", seed);
                                 } else {
-                                    logger.debug("An existing seed will be used for item {}", item.getUID());
-
                                     /**
                                      * Uses an existing seed to publish this item states
                                      */
 
                                     seed = element.getConfiguration().get("seed").toString();
                                     if (seed != null && !seed.isEmpty() && seed.length() == 81) {
+                                        logger.debug("An existing seed will be used for item {}", item.getUID());
                                         stateListener.getUidToSeedMap().put(item.getUID(), seed.toString());
-                                        updateMaps(item, seed);
                                     } else {
                                         logger.debug("Invalid seed for item {}. Generating a new one", item.getUID());
                                         seed = seedGenerator.getNewSeed();

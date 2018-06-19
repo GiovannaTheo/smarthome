@@ -12,20 +12,22 @@
  */
 package org.eclipse.smarthome.binding.iota.internal;
 
-import static org.eclipse.smarthome.binding.iota.IotaBindingConstants.*;
-
 import java.util.Set;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.binding.iota.IotaBindingConstants;
 import org.eclipse.smarthome.binding.iota.handler.IotaBridgeHandler;
 import org.eclipse.smarthome.binding.iota.handler.IotaThingHandler;
+import org.eclipse.smarthome.binding.iota.handler.TransformationServiceProvider;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
+import org.eclipse.smarthome.core.transform.TransformationHelper;
+import org.eclipse.smarthome.core.transform.TransformationService;
 import org.osgi.service.component.annotations.Component;
 
 import com.google.common.collect.Sets;
@@ -37,7 +39,7 @@ import com.google.common.collect.Sets;
  * @author Theo Giovanna - Initial contribution
  */
 @Component(service = ThingHandlerFactory.class, name = "IotaHandlerFactory")
-public class IotaHandlerFactory extends BaseThingHandlerFactory {
+public class IotaHandlerFactory extends BaseThingHandlerFactory implements TransformationServiceProvider {
 
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Sets
             .newHashSet(IotaBindingConstants.THING_TYPE_BRIDGE, IotaBindingConstants.THING_TYPE_IOTA);
@@ -51,16 +53,21 @@ public class IotaHandlerFactory extends BaseThingHandlerFactory {
     protected @Nullable ThingHandler createHandler(Thing thing) {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
-        if (THING_TYPE_IOTA.equals(thingTypeUID)) {
-            return new IotaThingHandler(thing);
+        if (IotaBindingConstants.THING_TYPE_IOTA.equals(thingTypeUID)) {
+            return new IotaThingHandler(thing, this);
         }
 
-        if (THING_TYPE_BRIDGE.equals(thingTypeUID)) {
+        if (IotaBindingConstants.THING_TYPE_BRIDGE.equals(thingTypeUID)) {
             IotaBridgeHandler handler = new IotaBridgeHandler((Bridge) thing);
             return handler;
         }
 
         return null;
+    }
+
+    @Override
+    public TransformationService getTransformationService(@NonNull String type) {
+        return TransformationHelper.getTransformationService(bundleContext, type);
     }
 
 }

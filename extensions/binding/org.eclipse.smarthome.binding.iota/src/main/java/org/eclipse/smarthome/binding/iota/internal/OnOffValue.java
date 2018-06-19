@@ -21,7 +21,7 @@ import org.eclipse.smarthome.core.types.State;
  * @author David Graeff - Initial contribution
  */
 public class OnOffValue implements AbstractIotaThingValue {
-    private OnOffType boolValue;
+    private OnOffType boolValue = null;
     private boolean isInversedOnOff = false;
     private final String onValue;
     private final String offValue;
@@ -30,7 +30,6 @@ public class OnOffValue implements AbstractIotaThingValue {
         this.onValue = onValue == null ? "ON" : onValue;
         this.offValue = offValue == null ? "OFF" : offValue;
         this.isInversedOnOff = isInversedOnOff == null ? false : isInversedOnOff;
-        boolValue = OnOffType.OFF;
     }
 
     @Override

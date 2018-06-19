@@ -16,9 +16,9 @@ import org.eclipse.smarthome.binding.iota.handler.IotaThingHandler;
 import org.eclipse.smarthome.core.types.State;
 
 /**
- * Represents the value of the {@link IotaThingHandler}. 
+ * Represents the value of the {@link IotaThingHandler}.
  *
- * @author Theo Giovanna - Adaptation to the iota binding
+ * @author Theo Giovanna - Initial contribution
  */
 public interface AbstractIotaThingValue {
     /**

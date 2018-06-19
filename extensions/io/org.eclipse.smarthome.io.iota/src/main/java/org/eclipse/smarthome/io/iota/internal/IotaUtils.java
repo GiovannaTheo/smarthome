@@ -31,14 +31,13 @@ import jota.IotaAPI;
  */
 public class IotaUtils {
 
-    // TODO: adjust the fetch method to the new implemented mode
-
     private final Logger logger = LoggerFactory.getLogger(IotaUtils.class);
     private static final String PATH = "../../extensions/io/org.eclipse.smarthome.io.iota/src/main/java/org/eclipse/smarthome/io/iota/mam.client.js/example/";
     private String seed = null;
     private int start = 0;
     private IotaAPI bridge;
     Process process;
+    private String oldResult = "";
 
     public IotaUtils() {
 
@@ -58,12 +57,12 @@ public class IotaUtils {
      * Attach an item state on the Tangle, through MAM
      *
      * @param bridge the IOTA API endpoint
-     * @param item the item for which we want to publish data
-     * @param state the item's state
+     * @param item   the item for which we want to publish data
+     * @param state  the item's state
      */
-    protected void publishState(JsonElement jsonElement, String mode, String key) {
+    protected void publishState(JsonElement states, String mode, String key) {
 
-        String payload = jsonElement.toString();
+        String payload = states.toString();
         String[] param = null;
         JsonParser parser = new JsonParser();
 
@@ -111,14 +110,26 @@ public class IotaUtils {
      *
      * @param bridge the IOTA API endpoint
      */
-    public String fetchFromTangle(int refresh, String root, String mode) {
+    public String fetchFromTangle(int refresh, String root, String mode, String key) {
+        String[] cmd;
         JsonParser parser = new JsonParser();
         JsonObject json = new JsonObject();
-        String[] cmd = refresh == 0 ? new String[] { "/usr/local/bin/node", PATH + "fetchSync.js",
-                bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root, mode }
-                : new String[] { "/usr/local/bin/node", PATH + "fetchAsync.js",
-                        bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root,
-                        mode };
+        if (key == null || key.isEmpty()) {
+            cmd = refresh == 0 ? new String[] { "/usr/local/bin/node", PATH + "fetchSync.js",
+                    bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root, mode }
+                    : new String[] { "/usr/local/bin/node", PATH + "fetchAsync.js",
+                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root,
+                            mode };
+        } else {
+            cmd = refresh == 0
+                    ? new String[] { "/usr/local/bin/node", PATH + "fetchSync.js",
+                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root,
+                            mode, key }
+                    : new String[] { "/usr/local/bin/node", PATH + "fetchAsync.js",
+                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root,
+                            mode, key };
+        }
+
         try {
             Process process = Runtime.getRuntime().exec(cmd);
             String result = IOUtils.toString(process.getInputStream(), "UTF-8");
@@ -129,7 +140,13 @@ public class IotaUtils {
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
-        return json.toString();
+        if (json.toString().equals("{}")) { // no new data fetched yet, empty json
+            return oldResult;
+        } else {
+            oldResult = json.toString();
+            return json.toString();
+
+        }
     }
 
     public boolean checkAPI() {

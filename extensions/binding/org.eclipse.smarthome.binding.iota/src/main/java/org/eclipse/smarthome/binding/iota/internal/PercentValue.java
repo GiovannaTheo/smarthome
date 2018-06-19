@@ -28,14 +28,13 @@ public class PercentValue implements AbstractIotaThingValue {
     private final double step;
     private final Boolean isFloat;
 
-    private PercentType percentValue;
+    private PercentType percentValue = null;
 
     public PercentValue(Boolean isFloat, BigDecimal min, BigDecimal max, BigDecimal step) {
         this.isFloat = isFloat == null ? true : isFloat;
         this.min = min == null ? 0.0 : min.doubleValue();
         this.max = max == null ? 100.0 : max.doubleValue();
         this.step = step == null ? 1.0 : step.doubleValue();
-        percentValue = new PercentType();
     }
 
     @Override
