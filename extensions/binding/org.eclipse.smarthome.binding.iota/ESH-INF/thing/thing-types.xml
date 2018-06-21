@@ -36,14 +36,14 @@
         <item-type>String</item-type>
         <label>Text value</label>
         <config-description>
-            <parameter name="stateTopic" type="text">
+            <parameter name="stateTopic" type="text" required="true">
                 <label>IOTA state topic</label>
-                <description>An IOTA topic that this thing will subscribe to, to receive the state. This can be left empty, the thing will be state-less then.</description>
-                <default></default>
+                <description>An IOTA topic that this thing will subscribe to, to receive the state (e.g. humidity). If set to ANY, any data matcing the item type will be used as state source</description>
+                <default>ANY</default>
             </parameter>
             <parameter name="transformationPattern" type="text">
                 <label>Transformation pattern</label>
-                <description>Any supported transformation can be used. An example for a received JSON from a IOTA state topic would be a pattern of JSONPATH:$.thingNumber.status.state for a json [{"NAME": name, "STATUS": { "TOPIC": topic, "STATE": state, "TIME": time }}].</description>
+                <description>Any supported transformation can be used. An example for a received JSON from a IOTA state topic would be a pattern of JSONPATH:$.thingNumber.status.state for a json [{"NAME": name, "STATUS": { "TOPIC": topic, "STATE": state, "TIME": time }}]. If used, the topic is ignored, and the state will be the value pointed by the transformation pattern.</description>
                 <default></default>
                 <advanced>true</advanced>
             </parameter>
@@ -54,14 +54,14 @@
         <item-type>Number</item-type>
         <label>Number value</label>
         <config-description>
-            <parameter name="stateTopic" type="text">
+            <parameter name="stateTopic" type="text" required="true">
                 <label>IOTA state topic</label>
-                <description>An IOTA topic that this thing will subscribe to, to receive the state. This can be left empty, the thing will be state-less then.</description>
-                <default></default>
+                <description>An IOTA topic that this thing will subscribe to, to receive the state (e.g. humidity). If set to ANY, any data matcing the item type will be used as state source</description>
+                <default>ANY</default>
             </parameter>
             <parameter name="transformationPattern" type="text">
                 <label>Transformation pattern</label>
-                <description>Any supported transformation can be used. An example for a received JSON from a IOTA state topic would be a pattern of JSONPATH:$.thingNumber.status.state for a json [{"NAME": name, "STATUS": { "TOPIC": topic, "STATE": state, "TIME": time }}].</description>
+                <description>Any supported transformation can be used. An example for a received JSON from a IOTA state topic would be a pattern of JSONPATH:$.thingNumber.status.state for a json [{"NAME": name, "STATUS": { "TOPIC": topic, "STATE": state, "TIME": time }}]. If used, the topic is ignored, and the state will be the value pointed by the transformation pattern.</description>
                 <default></default>
                 <advanced>true</advanced>
             </parameter>
@@ -83,14 +83,14 @@
         <item-type>Dimmer</item-type>
         <label>Percentage value</label>
         <config-description>
-            <parameter name="stateTopic" type="text">
+            <parameter name="stateTopic" type="text" required="true">
                 <label>IOTA state topic</label>
-                <description>An IOTA topic that this thing will subscribe to, to receive the state. This can be left empty, the thing will be state-less then.</description>
-                <default></default>
+                <description>An IOTA topic that this thing will subscribe to, to receive the state (e.g. humidity). If set to ANY, any data matcing the item type will be used as state source</description>
+                <default>ANY</default>
             </parameter>
             <parameter name="transformationPattern" type="text">
                 <label>Transformation pattern</label>
-                <description>Any supported transformation can be used. An example for a received JSON from a IOTA state topic would be a pattern of JSONPATH:$.thingNumber.status.state for a json [{"NAME": name, "STATUS": { "TOPIC": topic, "STATE": state, "TIME": time }}].</description>
+                <description>Any supported transformation can be used. An example for a received JSON from a IOTA state topic would be a pattern of JSONPATH:$.thingNumber.status.state for a json [{"NAME": name, "STATUS": { "TOPIC": topic, "STATE": state, "TIME": time }}]. If used, the topic is ignored, and the state will be the value pointed by the transformation pattern.</description>
                 <default></default>
                 <advanced>true</advanced>
             </parameter>
@@ -122,14 +122,14 @@
         <item-type>Switch</item-type>
         <label>On/Off value</label>
         <config-description>
-            <parameter name="stateTopic" type="text">
+            <parameter name="stateTopic" type="text" required="true">
                 <label>IOTA state topic</label>
-                <description>An IOTA topic that this thing will subscribe to, to receive the state. This can be left empty, the thing will be state-less then.</description>
-                <default></default>
+                <description>An IOTA topic that this thing will subscribe to, to receive the state (e.g. humidity). If set to ANY, any data matcing the item type will be used as state source</description>
+                <default>ANY</default>
             </parameter>
             <parameter name="transformationPattern" type="text">
                 <label>Transformation pattern</label>
-                <description>Any supported transformation can be used. An example for a received JSON from a IOTA state topic would be a pattern of JSONPATH:$.thingNumber.status.state for a json [{"NAME": name, "STATUS": { "TOPIC": topic, "STATE": state, "TIME": time }}].</description>
+                <description>Any supported transformation can be used. An example for a received JSON from a IOTA state topic would be a pattern of JSONPATH:$.thingNumber.status.state for a json [{"NAME": name, "STATUS": { "TOPIC": topic, "STATE": state, "TIME": time }}]. If used, the topic is ignored, and the state will be the value pointed by the transformation pattern.</description>
                 <default></default>
                 <advanced>true</advanced>
             </parameter>

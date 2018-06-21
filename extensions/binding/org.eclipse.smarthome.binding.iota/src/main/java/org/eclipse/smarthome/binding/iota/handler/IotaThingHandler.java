@@ -16,6 +16,7 @@ import static org.eclipse.smarthome.binding.iota.handler.IotaConfiguration.*;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -228,6 +229,10 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
         if (data.size() != 0) {
             for (Channel channel : thing.getChannels()) {
                 ChannelConfig config = channelDataByChannelUID.get(channel.getUID());
+                /**
+                 * If retrieving data from other sources than ESH, uses the transformation pattern
+                 * to retrieve the data
+                 */
                 if (config.transformationPattern != null) {
                     TransformationService service = transformationServiceProvider
                             .getTransformationService(config.transformationServiceName);
@@ -236,33 +241,47 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
                         return;
                     }
                     try {
+                        /**
+                         * A path to the value has been directly inserted by the user.
+                         * For instance, for a json { "device": { "status": { "value": "73" } } },
+                         * one can extract the state through $.device.status.value
+                         */
                         str = service.transform(config.transformationPattern, data.toString());
                         if (str != null && !str.isEmpty()) {
                             config.processMessage(str);
                         }
+
                     } catch (TransformationException e) {
                         logger.error("Error executing the transformation {}", str);
                         return;
                     }
                 } else {
-                    for (JsonElement json : data) {
+                    /**
+                     * Data were sent through the io.iota bundle
+                     */
+                    for (Iterator<JsonElement> it = data.iterator(); it.hasNext();) {
+                        JsonElement json = it.next();
                         String value = json.getAsJsonObject().get("STATUS").getAsJsonObject().get("STATE")
                                 .getAsString();
                         String topic = json.getAsJsonObject().get("STATUS").getAsJsonObject().get("TOPIC")
                                 .getAsString();
-                        if (!topic.isEmpty() && !value.isEmpty()) {
+
+                        if (!config.stateTopic.isEmpty()) {
                             if (topic.toLowerCase().equals(config.stateTopic.toLowerCase())) {
                                 logger.debug("Assigning data {} to channel {}", json, channel.getUID());
                                 config.processMessage(value);
-                                if (this.getThing().getChannels().size() != data.size()) {
-                                    /**
-                                     * If the thing has less channels than the data has items (or the other way around),
-                                     * then we stop looping over the data as soon as we found the first compatible item
-                                     * for this channel
-                                     */
-                                    logger.warn("Warning: data size = {} but {} channels have been configured",
-                                            data.size(), this.getThing().getChannels().size());
-                                    break;
+                                it.remove(); // this json data is already assigned to some channel
+                                break; // no need to loop over the rest of the data since we found a candidate
+                            } else {
+                                /**
+                                 * One can use the "ANY" wildcard to associate to a channel any value
+                                 * from the json data, independently of the topic
+                                 */
+                                if (config.stateTopic.toUpperCase().equals("ANY")) {
+                                    logger.debug("Assigning data {} to channel {}", json, channel.getUID());
+                                    config.processMessage(value);
+                                    it.remove(); // this json data is already assigned to some channel
+                                    break; // no need to loop over the rest of the data since we found a candidate
                                 }
                             }
                         }
