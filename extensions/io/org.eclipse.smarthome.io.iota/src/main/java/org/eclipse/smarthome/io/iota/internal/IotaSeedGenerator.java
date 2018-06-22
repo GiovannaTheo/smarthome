@@ -15,6 +15,9 @@ package org.eclipse.smarthome.io.iota.internal;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Seed and key generator for the iota Tangle
  *
@@ -22,6 +25,7 @@ import java.security.SecureRandom;
  */
 public class IotaSeedGenerator {
 
+    private final Logger logger = LoggerFactory.getLogger(IotaSeedGenerator.class);
     private static final String TRYTE_ALPHABET = "9ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     private static final String KEY_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"; // MAM allows for uppercase char only
     private static final int SEED_LEN = 81;
@@ -35,7 +39,7 @@ public class IotaSeedGenerator {
         try {
             sr = SecureRandom.getInstanceStrong();
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            logger.debug("Exception happened: {}", e);
         }
 
         StringBuilder sb = new StringBuilder(SEED_LEN);
@@ -53,7 +57,7 @@ public class IotaSeedGenerator {
         try {
             sr = SecureRandom.getInstanceStrong();
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            logger.debug("Exception happened: {}", e);
         }
 
         StringBuilder sb = new StringBuilder(SEED_LEN);

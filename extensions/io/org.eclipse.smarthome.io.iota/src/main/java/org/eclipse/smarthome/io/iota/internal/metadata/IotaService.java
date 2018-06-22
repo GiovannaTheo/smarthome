@@ -78,7 +78,9 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                     seed = seedGenerator.getNewSeed();
                                     updateMaps(item, seed);
                                     element.getConfiguration().put("seed", seed);
+                                    metadataRegistry.update(element);
                                 } else {
+
                                     /**
                                      * Uses an existing seed to publish this item states
                                      */
@@ -86,12 +88,29 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                     seed = element.getConfiguration().get("seed").toString();
                                     if (seed != null && !seed.isEmpty() && seed.length() == 81) {
                                         logger.debug("An existing seed will be used for item {}", item.getUID());
-                                        stateListener.getUidToSeedMap().put(item.getUID(), seed.toString());
+
+                                        /**
+                                         * Checks if some ESH instance is already publishing on this seed.
+                                         * If so, associating the item UID to it, otherwise creating a new
+                                         * instance of IOTA Utils for publishing.
+                                         */
+
+                                        if (stateListener.getSeedToUtilsMap().containsKey(seed)) {
+                                            stateListener.getUidToSeedMap().put(item.getUID(), seed);
+                                        } else {
+                                            updateMaps(item, seed);
+                                            // -1 indicates the JS script to recompute itself the depth
+                                            // of the merkle root tree by fetching all the data from the
+                                            // initial root
+                                            stateListener.getSeedToUtilsMap().get(seed).setStart(-1);
+                                        }
+
                                     } else {
                                         logger.debug("Invalid seed for item {}. Generating a new one", item.getUID());
                                         seed = seedGenerator.getNewSeed();
                                         updateMaps(item, seed);
                                         element.getConfiguration().put("seed", seed);
+                                        metadataRegistry.update(element);
                                     }
                                 }
 
@@ -111,6 +130,7 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                         String key = seedGenerator.getNewPrivateKey();
                                         stateListener.getSeedToPrivateKeyMap().put(seed, key);
                                         element.getConfiguration().put("key", key);
+                                        metadataRegistry.update(element);
                                     }
                                 }
 
@@ -127,7 +147,7 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                 }
             }
         } catch (ItemNotFoundException e) {
-            e.printStackTrace();
+            logger.debug("Exception happened: {}", e);
         }
     }
 
@@ -138,15 +158,13 @@ public class IotaService implements RegistryChangeListener<Metadata> {
 
     @Override
     public void updated(Metadata oldElement, Metadata element) {
-        logger.debug("Iota metadata updated from {} to {}", oldElement.getValue(), element.getValue());
-        if (element.getValue().equals("yes")) {
-            added(element);
-        } else {
+        logger.debug("Iota metadata updated");
+        if (element.getValue().equals("no")) {
             try {
                 Item item = itemListener.getItemRegistry().getItem(oldElement.getUID().getItemName());
                 itemListener.removed(item);
             } catch (ItemNotFoundException e) {
-                e.printStackTrace();
+                logger.debug("Exception happened: {}", e);
             }
         }
     }

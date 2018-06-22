@@ -60,7 +60,7 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
     // TODO: add tests
 
     private final Logger logger = LoggerFactory.getLogger(IotaThingHandler.class);
-    private final TransformationServiceProvider transformationServiceProvider;
+    private TransformationServiceProvider transformationServiceProvider;
     private final Map<ChannelUID, ChannelConfig> channelDataByChannelUID = new HashMap<>();
     private String root;
     private JsonArray data = new JsonArray();
@@ -73,6 +73,10 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
     public IotaThingHandler(Thing thing, TransformationServiceProvider transformationServiceProvider) {
         super(thing);
         this.transformationServiceProvider = transformationServiceProvider;
+    }
+
+    public IotaThingHandler(Thing thing) {
+        super(thing);
     }
 
     @Override

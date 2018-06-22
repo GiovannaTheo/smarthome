@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ActivationPolicy: lazy
 Bundle-ClassPath: ., lib/jota-0.9.6-SNAPSHOT-jar-with-dependencies.jar
 Bundle-ManifestVersion: 2
-Bundle-Name: iota Binding
+Bundle-Name: iota io
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-SymbolicName: org.eclipse.smarthome.io.iota;singleton:=true
 Bundle-Vendor: Eclipse.org/SmartHome

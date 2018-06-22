@@ -60,15 +60,24 @@ async function publishPublic() {
         
         }   
     } else {
+
+        // Recalculating the index
         mamState = Mam.init(iota, process.argv[5])
         let message = Mam.create(mamState, states)
         mamState = message.state
-        let start = parseInt(process.argv[6])
+        let start = undefined
+
+        if (process.argv[6] === undefined){
+            let resp = await Mam.fetch(message.root, 'public', null)
+            start = resp.messages.length //number of messages sent on this stream
+        } else {
+            start = parseInt(process.argv[6])
+        }
 
         for (let i=0; i < start; i++){
             message = Mam.create(mamState, states)
             mamState = message.state
-        }    
+        }  
 
         obj = await Mam.attach(message.payload, message.address)
 
@@ -82,8 +91,8 @@ async function publishPublic() {
     "START": "` + mamState['channel']['start'] + `"
 }`
 
-        console.log(msg)
-        
+            console.log(msg)
+            
         }
     }
 }
@@ -122,7 +131,14 @@ async function publishPrivate() {
         let message = Mam.create(mamState, states)
         mamState = message.state 
 
-        let start = parseInt(process.argv[6])
+        let start = undefined
+
+        if (process.argv[6] === undefined){
+            let resp = await Mam.fetch(message.root, 'private', null)
+            start = resp.messages.length //number of messages sent on this stream
+        } else {
+            start = parseInt(process.argv[6])
+        }
 
         for (let i=0; i < start; i++){
             message = Mam.create(mamState, states)
@@ -192,7 +208,14 @@ async function publishRestricted() {
             let message = Mam.create(mamState, states)
             mamState = message.state
 
-            let start = parseInt(process.argv[7])
+            let start = undefined
+
+            if (process.argv[7] === undefined){
+                let resp = await Mam.fetch(message.root, 'restricted', process.argv[5].toUpperCase())
+                start = resp.messages.length //number of messages sent on this stream
+            } else {
+                start = parseInt(process.argv[7])
+            }
 
             for (let i=0; i < start; i++){
                 message = Mam.create(mamState, states)

@@ -32,7 +32,7 @@ import jota.IotaAPI;
 public class IotaUtils {
 
     private final Logger logger = LoggerFactory.getLogger(IotaUtils.class);
-    private static final String PATH = "../../extensions/io/org.eclipse.smarthome.io.iota/src/main/java/org/eclipse/smarthome/io/iota/mam.client.js/example/";
+    private static final String PATH = "../../extensions/io/org.eclipse.smarthome.io.iota/lib/mam/example/";
     private String seed = null;
     private int start = 0;
     private IotaAPI bridge;
@@ -69,15 +69,23 @@ public class IotaUtils {
         switch (mode) {
             case "public":
             case "private":
-                param = new String[] { "/usr/local/bin/node", PATH + "publish.js",
-                        bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), payload,
-                        mode, seed, String.valueOf(start) };
+                param = start == -1
+                        ? new String[] { "/usr/local/bin/node", PATH + "publish.js",
+                                bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
+                                payload, mode, seed }
+                        : new String[] { "/usr/local/bin/node", PATH + "publish.js",
+                                bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
+                                payload, mode, seed, String.valueOf(start) };
                 break;
             case "restricted":
                 if (key != null && !key.isEmpty()) {
-                    param = new String[] { "/usr/local/bin/node", PATH + "publish.js",
-                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
-                            payload, mode, key, seed, String.valueOf(start) };
+                    param = start == -1
+                            ? new String[] { "/usr/local/bin/node", PATH + "publish.js",
+                                    bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
+                                    payload, mode, key, seed }
+                            : new String[] { "/usr/local/bin/node", PATH + "publish.js",
+                                    bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
+                                    payload, mode, key, seed, String.valueOf(start) };
                 } else {
                     logger.warn("You must provide a key to use the restricted mode. Aborting");
                 }
@@ -101,7 +109,7 @@ public class IotaUtils {
                 process.waitFor();
             }
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            logger.debug("Exception happened: {}", e);
         }
     }
 
@@ -138,7 +146,7 @@ public class IotaUtils {
             }
             process.waitFor();
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            logger.debug("Exception happened: {}", e);
         }
         if (json.toString().equals("{}")) { // no new data fetched yet, empty json
             return oldResult;
@@ -155,5 +163,13 @@ public class IotaUtils {
         } else {
             return false;
         }
+    }
+
+    public int getStart() {
+        return start;
+    }
+
+    public void setStart(int start) {
+        this.start = start;
     }
 }

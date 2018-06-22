@@ -56,6 +56,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
         service.getMetadataRegistry().getAll().forEach(metadata -> {
             if (metadata.getUID().getItemName().equals(item.getName())) {
                 String seed = uidToSeedMap.get(item.getUID());
+
                 if (seedToJsonMap.containsKey(seed)) {
                     /**
                      * Entries already exists. Updating the value in the json array
