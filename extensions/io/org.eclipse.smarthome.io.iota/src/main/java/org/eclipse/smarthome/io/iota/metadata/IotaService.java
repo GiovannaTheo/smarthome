@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.eclipse.smarthome.io.iota.internal.metadata;
+package org.eclipse.smarthome.io.iota.metadata;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.eclipse.smarthome.core.common.registry.RegistryChangeListener;
