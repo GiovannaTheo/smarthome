@@ -7,15 +7,15 @@
         <label>IOTA Bridge</label>
         <description>The IOTA bridge represents the node instance on which transactions are issued.</description>
         <config-description>
-            <parameter name="host" type="text" required="true">
-                <label>Node's host</label>
-                <description>Defines the host used by IOTA API</description>
-                <default>nodes.testnet.iota.org</default>
-            </parameter>
             <parameter name="protocol" type="text" required="true">
                 <label>Node's protocol</label>
                 <description>Defines the protocol used by IOTA API</description>
                 <default>https</default>
+            </parameter>
+            <parameter name="host" type="text" required="true">
+                <label>Node's host</label>
+                <description>Defines the host used by IOTA API</description>
+                <default>nodes.iota.cafe</default>
             </parameter>
             <parameter name="port" type="integer" required="true">
                 <label>Node's port</label>

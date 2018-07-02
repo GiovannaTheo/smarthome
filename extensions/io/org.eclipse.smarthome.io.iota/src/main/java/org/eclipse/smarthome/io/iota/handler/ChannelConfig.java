@@ -27,14 +27,9 @@ import org.slf4j.LoggerFactory;
 public class ChannelConfig {
     private final Logger logger = LoggerFactory.getLogger(ChannelConfig.class);
 
-    String stateTopic;
-    String transformationPattern;
-
-    BigDecimal min = BigDecimal.valueOf(0);
-    BigDecimal max = BigDecimal.valueOf(100);
+    String address;
     BigDecimal step = BigDecimal.valueOf(1);
-    Boolean isFloat = false;
-    Boolean inverse = false;
+    Boolean isFloat = true;
 
     AbstractIotaIoThingValue value;
     ChannelStateUpdateListener channelStateUpdateListener = null;

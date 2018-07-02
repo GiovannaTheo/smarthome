@@ -12,7 +12,7 @@
 		<parameter name="host" type="text" required="true">
 			<label>Host</label>
 			<description>Defines the host used by IOTA API</description>
-			<default>nodes.testnet.iota.org</default>
+			<default>nodes.iota.cafe</default>
 		</parameter>
 		<parameter name="port" type="integer" required="true">
 			<label>Port</label>
