@@ -28,7 +28,7 @@ public class IotaSettings {
     // Default node
     private int port = 443;
     private String protocol = "https";
-    private String host = "nodes.iota.cafe";
+    private String host = "nodes.testnet.iota.org";
     private final Logger logger = LoggerFactory.getLogger(IotaSettings.class);
 
     public void fill(IotaApiConfiguration config) throws UnknownHostException {

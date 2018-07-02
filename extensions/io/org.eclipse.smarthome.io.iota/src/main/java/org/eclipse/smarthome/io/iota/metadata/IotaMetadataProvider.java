@@ -67,12 +67,16 @@ public class IotaMetadataProvider implements MetadataConfigDescriptionProvider {
                                         new ParameterOption("restricted", "Restricted") //
                                 ).collect(toList())).build(), //
                         create("key", Type.TEXT).withLabel("Private Key").withDescription(
-                                "Leave blank for non-restricted mode, otherwise enter the private key you want to use")
+                                "Leave blank for non-restricted mode, otherwise enter the private key you want to use. If using the auto-compensation mechanism, leave it blank too since the client choses the password")
                                 .build(), //
                         create("seed", Type.TEXT).withLabel("Existing Seed Address").withDescription(
                                 "Leave blank to publish on a new root. Insert an existing root address to publish on an existing stream")
-                                .build() //
-                ).collect(toList());
+                                .build(), //
+                        create("price", Type.DECIMAL).withLabel("Price in Miota for this stream").withDescription(
+                                "If you want this stream to be accessible only in exchange of IOTA's, indicate its price here. Use it with Restricted mode only")
+                                .withDefault("0.0").build(), //
+                        create("wallet", Type.TEXT).withLabel("Wallet address on which to receive payment").build())
+                        .collect(toList());
         }
         return null;
     }

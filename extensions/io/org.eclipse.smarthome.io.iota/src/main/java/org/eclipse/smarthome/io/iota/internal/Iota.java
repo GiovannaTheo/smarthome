@@ -12,12 +12,22 @@
  */
 package org.eclipse.smarthome.io.iota.internal;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.items.ItemRegistry;
 import org.eclipse.smarthome.core.items.MetadataRegistry;
+import org.eclipse.smarthome.core.thing.Thing;
+import org.eclipse.smarthome.core.thing.ThingTypeUID;
+import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
+import org.eclipse.smarthome.core.thing.binding.ThingHandler;
+import org.eclipse.smarthome.io.iota.IotaIoBindingConstants;
+import org.eclipse.smarthome.io.iota.handler.IotaIoThingHandler;
 import org.eclipse.smarthome.io.iota.metadata.IotaService;
+import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +38,7 @@ import jota.IotaAPI;
  *
  * @author Theo Giovanna - Initial Contribution
  */
-public class Iota {
+public class Iota extends BaseThingHandlerFactory {
 
     private final Logger logger = LoggerFactory.getLogger(Iota.class);
     private final IotaService service = new IotaService();
@@ -50,7 +60,8 @@ public class Iota {
      * This function is called every time that the user updates the API parameters in Paper UI.
      * The Iota API instance is then updated accordingly
      */
-    protected synchronized void activate(Map<String, Object> data) {
+    protected synchronized void activate(ComponentContext componentContext, Map<String, Object> data) {
+        super.activate(componentContext);
         modified(new Configuration(data).as(IotaApiConfiguration.class));
     }
 
@@ -70,5 +81,24 @@ public class Iota {
     protected void deactivate() {
         service.setBridge(null);
         service.stop();
+    }
+
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections
+            .singleton(IotaIoBindingConstants.THING_TYPE_IOTA_IO);
+
+    @Override
+    public boolean supportsThingType(ThingTypeUID thingTypeUID) {
+        return SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
+    }
+
+    @Override
+    protected @Nullable ThingHandler createHandler(Thing thing) {
+        ThingTypeUID thingTypeUID = thing.getThingTypeUID();
+
+        if (IotaIoBindingConstants.THING_TYPE_IOTA_IO.equals(thingTypeUID)) {
+            return new IotaIoThingHandler(thing, service.getStateListener());
+        }
+
+        return null;
     }
 }

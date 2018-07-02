@@ -15,6 +15,7 @@ package org.eclipse.smarthome.io.iota.handler;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -30,12 +31,14 @@ import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.core.types.State;
 import org.eclipse.smarthome.io.iota.IotaIoBindingConstants;
+import org.eclipse.smarthome.io.iota.internal.IotaItemStateChangeListener;
 import org.eclipse.smarthome.io.iota.internal.NumberValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jota.IotaAPI;
 import jota.dto.response.GetBalancesResponse;
+import jota.model.Transaction;
 
 /**
  * The {@link IotaIoThingHandler} is responsible for handling commands, which are
@@ -57,9 +60,11 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
     private String protocol = "https";
     private String host = "nodes.iota.cafe";
     ScheduledFuture<?> refreshJob;
+    IotaItemStateChangeListener stateListener;
 
-    public IotaIoThingHandler(Thing thing) {
+    public IotaIoThingHandler(Thing thing, IotaItemStateChangeListener stateListener) {
         super(thing);
+        this.stateListener = stateListener;
     }
 
     @Override
@@ -157,16 +162,34 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
         for (Channel channel : thing.getChannels()) {
             ChannelConfig config = channelDataByChannelUID.get(channel.getUID());
             logger.debug("Refreshing balance for wallet address: {}", config.address);
-            GetBalancesResponse balanceAPI = bridge.getBalances(100, Arrays.asList(new String[] { config.address }));
+            GetBalancesResponse balanceAPI = null;
+            try {
+                balanceAPI = bridge.getBalances(100, Arrays.asList(new String[] { config.address }));
+            } catch (IllegalAccessError e) {
+                logger.debug("Error: invalid or empty wallet: {}", e.getMessage());
+            }
             if (balanceAPI != null) {
                 balance = Double.parseDouble(balanceAPI.getBalances()[0]) / 1000000;
             }
             config.processMessage(String.valueOf(balance));
-            if (channelUIDtoBalanceMap.get(channel.getUID()) != balance) {
-                // Balance has updated, need to link it with MAM
-            } else {
-                // Balance is identical
+            if (channelUIDtoBalanceMap.containsKey(channel.getUID())) {
+                if (channelUIDtoBalanceMap.get(channel.getUID()) != balance) {
+                    List<Transaction> transactions = bridge.findTransactionObjects(new String[] { config.address });
+                    // String tag = transactions.get(0).getTag(); // TODO: decrypt RSA password contained in tag
+                    String walletAddress = stateListener.getWalletToSeedMap().get(config.address);
+                    String seed = stateListener.getWalletToSeedMap().get(walletAddress);
+                    if (Math.abs(balance - channelUIDtoBalanceMap.get(channel.getUID())) == stateListener
+                            .getWalletToPayment().get(config.address)) {
+                        logger.debug("Payment received. Processing MAM stream");
+                        // TODO: change seedToUtils password for MAM. For instance:
+                        stateListener.getSeedToPrivateKeyMap().put(seed, "RSAPASSWORD");
+                        stateListener.getSeedToPaidMap().put(seed, true);
+                    }
+                } else {
+                    // Balance is identical
+                }
             }
+            // Updating new balance value
             channelUIDtoBalanceMap.put(channel.getUID(), balance);
         }
 

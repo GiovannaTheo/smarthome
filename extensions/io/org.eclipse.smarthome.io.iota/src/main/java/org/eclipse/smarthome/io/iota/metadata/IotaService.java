@@ -12,6 +12,8 @@
  */
 package org.eclipse.smarthome.io.iota.metadata;
 
+import java.math.BigDecimal;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.eclipse.smarthome.core.common.registry.RegistryChangeListener;
 import org.eclipse.smarthome.core.items.GenericItem;
@@ -119,6 +121,7 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                  */
 
                                 if (element.getConfiguration().get("mode").equals("restricted") && !seed.isEmpty()) {
+
                                     if (element.getConfiguration().get("key") != null) {
                                         logger.debug("An existing key will be used for item {}", item.getUID());
                                         String inputKey = element.getConfiguration().get("key").toString();
@@ -132,6 +135,27 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                         element.getConfiguration().put("key", key);
                                         metadataRegistry.update(element);
                                     }
+
+                                    double price = 0.0;
+                                    if (element.getConfiguration().get("price") instanceof BigDecimal) {
+                                        price = ((BigDecimal) element.getConfiguration().get("price")).doubleValue();
+                                    } else {
+                                        price = (double) element.getConfiguration().get("price");
+                                    }
+                                    if (price != 0.0) {
+                                        // If the stream requires payment, we indicate that we haven't received it yet
+                                        // and that handshake hasn't started
+                                        String wallet = element.getConfiguration().get("wallet").toString();
+                                        if (!wallet.isEmpty()) {
+                                            stateListener.getSeedToPaidMap().put(seed, false);
+                                            stateListener.getSeedToHandshakeMap().put(seed, false);
+                                            stateListener.getWalletToSeedMap().put(wallet, seed);
+                                            stateListener.getWalletToPayment().put(wallet, price);
+                                        } else {
+                                            logger.warn("Wallet address cannot be empty. Please correct your entries.");
+                                        }
+                                    }
+
                                 }
 
                                 logger.debug("Iota state listener added for item: {}", item.getName());
@@ -216,5 +240,6 @@ public class IotaService implements RegistryChangeListener<Metadata> {
 
     public void setBridge(IotaAPI bridge) {
         this.bridge = bridge;
+        stateListener.setBridge(bridge);
     }
 }

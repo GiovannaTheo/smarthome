@@ -34,7 +34,7 @@ public class IotaUtils {
     private final Logger logger = LoggerFactory.getLogger(IotaUtils.class);
     private static final String PATH = "../../extensions/io/org.eclipse.smarthome.io.iota/lib/mam/example/";
     private String seed = null;
-    private int start = 0;
+    private int start = -1;
     private IotaAPI bridge;
     Process process;
     private String oldResult = "";
@@ -99,9 +99,9 @@ public class IotaUtils {
             if (param != null) {
                 logger.debug("Doing proof of work to attach data to the Tangle.... Processing in mode -- {} -- ", mode);
                 process = Runtime.getRuntime().exec(param);
-                String resultPublic = IOUtils.toString(process.getInputStream(), "UTF-8");
-                if (resultPublic != null && !resultPublic.isEmpty()) {
-                    JsonObject json = (JsonObject) parser.parse(resultPublic);
+                String result = IOUtils.toString(process.getInputStream(), "UTF-8");
+                if (result != null && !result.isEmpty()) {
+                    JsonObject json = (JsonObject) parser.parse(result);
                     start = json.getAsJsonPrimitive("START").getAsInt();
                     seed = json.getAsJsonPrimitive("SEED").getAsString();
                     logger.debug("Sent: {}", json);
@@ -154,6 +154,28 @@ public class IotaUtils {
             oldResult = json.toString();
             return json.toString();
 
+        }
+    }
+
+    public void startHandshake(JsonObject handshakePacket) {
+        JsonParser parser = new JsonParser();
+        String[] cmd = new String[] { "/usr/local/bin/node", PATH + "handshake.js",
+                bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
+                handshakePacket.toString() };
+        try {
+            logger.debug(
+                    "Doing proof of work to attach data to the Tangle.... Handshake protocol for auto-compensation mechanism");
+            process = Runtime.getRuntime().exec(cmd);
+            String result = IOUtils.toString(process.getInputStream(), "UTF-8");
+            if (result != null && !result.isEmpty()) {
+                JsonObject json = (JsonObject) parser.parse(result);
+                start = json.getAsJsonPrimitive("START").getAsInt();
+                seed = json.getAsJsonPrimitive("SEED").getAsString();
+                logger.debug("Sent: {}", json);
+            }
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            logger.debug("Exception happened: {}", e);
         }
     }
 

@@ -12,6 +12,7 @@
  */
 package org.eclipse.smarthome.io.iota.internal;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -49,6 +50,10 @@ public class IotaItemStateChangeListener implements StateChangeListener {
     private final HashMap<String, Debouncer> seedToDebouncerMap = new HashMap<>();
     private final HashMap<String, IotaUtils> seedToUtilsMap = new HashMap<>();
     private final HashMap<String, String> seedToPrivateKeyMap = new HashMap<>();
+    private final HashMap<String, Boolean> seedToPaidMap = new HashMap<>();
+    private final HashMap<String, Boolean> seedToHandshakeMap = new HashMap<>();
+    private final HashMap<String, String> walletToSeedMap = new HashMap<>();
+    private final HashMap<String, Double> walletToPayment = new HashMap<>();
     private IotaService service;
 
     @Override
@@ -71,8 +76,20 @@ public class IotaItemStateChangeListener implements StateChangeListener {
                     seedToJsonMap.put(seed,
                             addToStates(item, newState, new Gson().fromJson("{\"Items\":[]}", JsonObject.class)));
                 }
+
                 String mode = metadata.getConfiguration().get("mode").toString();
+
+                double p = 0.0;
+                if (metadata.getConfiguration().get("price") instanceof BigDecimal) {
+                    p = ((BigDecimal) metadata.getConfiguration().get("price")).doubleValue();
+                } else {
+                    p = (double) metadata.getConfiguration().get("price");
+                }
+
+                final double price = p;
+
                 Debouncer debouncer = seedToDebouncerMap.get(seed);
+
                 if (debouncer != null) {
                     /**
                      * If several items publish on the same channel, the debounce mechanism bellow
@@ -82,8 +99,42 @@ public class IotaItemStateChangeListener implements StateChangeListener {
                     debouncer.debounce(IotaItemStateChangeListener.class, new Runnable() {
                         @Override
                         public void run() {
-                            String key = mode.equals("restricted") ? seedToPrivateKeyMap.get(seed) : null;
-                            seedToUtilsMap.get(seed).publishState(seedToJsonMap.get(seed).get("Items"), mode, key);
+                            if (mode.equals("restricted")) {
+                                if (price == 0.0) {
+                                    // Normal restricted mode with publisher-chosen password
+                                    seedToUtilsMap.get(seed).publishState(seedToJsonMap.get(seed).get("Items"), mode,
+                                            seedToPrivateKeyMap.get(seed));
+                                } else {
+                                    // Auto-compensation mechanism
+                                    if (seedToHandshakeMap.get(seed) == false) {
+                                        // Sending handshake packet
+                                        if (!metadata.getConfiguration().get("wallet").toString().isEmpty()) {
+
+                                            /**
+                                             * Constructing the handshake packet and start the handshake protocol
+                                             */
+
+                                            JsonObject handshakeJson = new JsonObject();
+                                            String wallet = metadata.getConfiguration().get("wallet").toString();
+                                            handshakeJson.addProperty("Wallet", wallet);
+                                            handshakeJson.addProperty("Price", price);
+                                            seedToUtilsMap.get(seed).startHandshake(handshakeJson);
+                                            seedToHandshakeMap.put(seed, true); // indicating that hanshake is completed
+
+                                        } else {
+                                            logger.warn("Wallet address cannot be empty. Aborting.");
+                                        }
+                                    }
+
+                                    if (seedToPaidMap.get(seed) == true) {
+                                        // Data have been paid. Processing normally
+                                        seedToUtilsMap.get(seed).publishState(seedToJsonMap.get(seed).get("Items"),
+                                                mode, seedToPrivateKeyMap.get(seed));
+                                    }
+                                }
+                            } else {
+                                seedToUtilsMap.get(seed).publishState(seedToJsonMap.get(seed).get("Items"), mode, null);
+                            }
                         }
                     }, 1000, TimeUnit.MILLISECONDS);
                 }
@@ -200,6 +251,22 @@ public class IotaItemStateChangeListener implements StateChangeListener {
 
     public HashMap<String, String> getSeedToPrivateKeyMap() {
         return seedToPrivateKeyMap;
+    }
+
+    public HashMap<String, Boolean> getSeedToPaidMap() {
+        return seedToPaidMap;
+    }
+
+    public HashMap<String, Boolean> getSeedToHandshakeMap() {
+        return seedToHandshakeMap;
+    }
+
+    public HashMap<String, String> getWalletToSeedMap() {
+        return walletToSeedMap;
+    }
+
+    public HashMap<String, Double> getWalletToPayment() {
+        return walletToPayment;
     }
 
 }
