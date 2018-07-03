@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.eclipse.smarthome.io.iota.internal;
+package org.eclipse.smarthome.io.iota.security;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;

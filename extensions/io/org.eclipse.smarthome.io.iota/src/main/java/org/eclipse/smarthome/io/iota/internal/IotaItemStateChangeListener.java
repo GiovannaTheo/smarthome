@@ -54,6 +54,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
     private final HashMap<String, Boolean> seedToHandshakeMap = new HashMap<>();
     private final HashMap<String, String> walletToSeedMap = new HashMap<>();
     private final HashMap<String, Double> walletToPayment = new HashMap<>();
+    private final HashMap<String, String[]> seedToRSAKeys = new HashMap<>();
     private IotaService service;
 
     @Override
@@ -116,8 +117,10 @@ public class IotaItemStateChangeListener implements StateChangeListener {
 
                                             JsonObject handshakeJson = new JsonObject();
                                             String wallet = metadata.getConfiguration().get("wallet").toString();
+                                            String publicKey = seedToRSAKeys.get(seed)[0];
                                             handshakeJson.addProperty("Wallet", wallet);
                                             handshakeJson.addProperty("Price", price);
+                                            handshakeJson.addProperty("Public RSA", publicKey);
                                             seedToUtilsMap.get(seed).startHandshake(handshakeJson);
                                             seedToHandshakeMap.put(seed, true); // indicating that hanshake is completed
 
@@ -267,6 +270,10 @@ public class IotaItemStateChangeListener implements StateChangeListener {
 
     public HashMap<String, Double> getWalletToPayment() {
         return walletToPayment;
+    }
+
+    public HashMap<String, String[]> getSeedToRSAKeys() {
+        return seedToRSAKeys;
     }
 
 }

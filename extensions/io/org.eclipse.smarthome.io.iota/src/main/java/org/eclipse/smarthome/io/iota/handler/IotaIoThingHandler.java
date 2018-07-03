@@ -13,12 +13,18 @@
 package org.eclipse.smarthome.io.iota.handler;
 
 import java.math.BigDecimal;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.thing.Channel;
@@ -33,6 +39,7 @@ import org.eclipse.smarthome.core.types.State;
 import org.eclipse.smarthome.io.iota.IotaIoBindingConstants;
 import org.eclipse.smarthome.io.iota.internal.IotaItemStateChangeListener;
 import org.eclipse.smarthome.io.iota.internal.NumberValue;
+import org.eclipse.smarthome.io.iota.security.RSAUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -175,14 +182,29 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
             if (channelUIDtoBalanceMap.containsKey(channel.getUID())) {
                 if (channelUIDtoBalanceMap.get(channel.getUID()) != balance) {
                     List<Transaction> transactions = bridge.findTransactionObjects(new String[] { config.address });
-                    // String tag = transactions.get(0).getTag(); // TODO: decrypt RSA password contained in tag
                     String walletAddress = stateListener.getWalletToSeedMap().get(config.address);
                     String seed = stateListener.getWalletToSeedMap().get(walletAddress);
                     if (Math.abs(balance - channelUIDtoBalanceMap.get(channel.getUID())) == stateListener
                             .getWalletToPayment().get(config.address)) {
-                        logger.debug("Payment received. Processing MAM stream");
-                        // TODO: change seedToUtils password for MAM. For instance:
-                        stateListener.getSeedToPrivateKeyMap().put(seed, "RSAPASSWORD");
+                        logger.debug("Payment received. Processing MAM stream...");
+                        if (transactions.get(0).getTag() != null && !transactions.get(0).getTag().isEmpty()) {
+                            logger.debug("Decrypting password for MAM stream...");
+                            // Tag should be the password RSA-encrypted in base64 format. The password must consist of
+                            // upper-case letters A-Z only (MAM restriction)
+                            String tag = transactions.get(0).getTag();
+                            try {
+                                RSAUtils rsa = new RSAUtils();
+                                String password = rsa.decrypt(tag, stateListener.getSeedToRSAKeys().get(seed)[1]);
+                                // Updating password for the next push
+                                stateListener.getSeedToPrivateKeyMap().put(seed, password);
+                            } catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException
+                                    | BadPaddingException | IllegalBlockSizeException e) {
+                                logger.debug("Exception happened: {}", e.toString());
+                            }
+                        } else {
+                            logger.warn(
+                                    "No password was provided by the client. The password for the MAM stream is therefore the one chosen by the publiser");
+                        }
                         stateListener.getSeedToPaidMap().put(seed, true);
                     }
                 } else {

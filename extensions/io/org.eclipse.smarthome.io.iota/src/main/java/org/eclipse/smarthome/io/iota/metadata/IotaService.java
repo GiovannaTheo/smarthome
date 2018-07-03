@@ -13,6 +13,7 @@
 package org.eclipse.smarthome.io.iota.metadata;
 
 import java.math.BigDecimal;
+import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.eclipse.smarthome.core.common.registry.RegistryChangeListener;
@@ -24,9 +25,10 @@ import org.eclipse.smarthome.core.items.MetadataRegistry;
 import org.eclipse.smarthome.io.iota.internal.Debouncer;
 import org.eclipse.smarthome.io.iota.internal.IotaItemRegistryListener;
 import org.eclipse.smarthome.io.iota.internal.IotaItemStateChangeListener;
-import org.eclipse.smarthome.io.iota.internal.IotaSeedGenerator;
 import org.eclipse.smarthome.io.iota.internal.IotaSettings;
 import org.eclipse.smarthome.io.iota.internal.IotaUtils;
+import org.eclipse.smarthome.io.iota.security.IotaSeedGenerator;
+import org.eclipse.smarthome.io.iota.security.RSAUtils;
 import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,6 +153,16 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                             stateListener.getSeedToHandshakeMap().put(seed, false);
                                             stateListener.getWalletToSeedMap().put(wallet, seed);
                                             stateListener.getWalletToPayment().put(wallet, price);
+
+                                            /**
+                                             * We now generate a new pair of RSA public/private keys that will be used
+                                             * for password communication for this particulare MAM stream
+                                             */
+
+                                            RSAUtils rsa = new RSAUtils();
+                                            stateListener.getSeedToRSAKeys().put(seed, new String[] {
+                                                    rsa.getPublicKeyBase64(), rsa.getPrivateKeyBase64() });
+
                                         } else {
                                             logger.warn("Wallet address cannot be empty. Please correct your entries.");
                                         }
@@ -170,7 +182,7 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                     }
                 }
             }
-        } catch (ItemNotFoundException e) {
+        } catch (ItemNotFoundException | NoSuchAlgorithmException e) {
             logger.debug("Exception happened: {}", e);
         }
     }
