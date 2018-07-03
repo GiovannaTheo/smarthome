@@ -15,12 +15,16 @@
             <parameter name="host" type="text" required="true">
                 <label>Node's host</label>
                 <description>Defines the host used by IOTA API</description>
-                <default>nodes.iota.cafe</default>
+                <default>iotanode.be</default>
             </parameter>
             <parameter name="port" type="integer" required="true">
                 <label>Node's port</label>
                 <description>Defines the port used by IOTA API</description>
                 <default>443</default>
+            </parameter>
+            <parameter name="seed" type="text" required="false">
+                <label>Seed</label>
+                <description>Defines the seed of the wallet used for payments</description>
             </parameter>
         </config-description>
     </bridge-type>

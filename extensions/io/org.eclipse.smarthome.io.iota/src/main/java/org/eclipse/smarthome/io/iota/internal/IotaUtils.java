@@ -23,6 +23,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import jota.IotaAPI;
+import jota.dto.response.FindTransactionResponse;
+import jota.error.NoNodeInfoException;
+import jota.utils.InputValidator;
 
 /**
  * Provides utils methods to work with IOTA transactions
@@ -187,11 +190,44 @@ public class IotaUtils {
         }
     }
 
+    public boolean checkSeed(String seed) {
+        return InputValidator.isValidSeed(seed);
+    }
+
+    public boolean checkTransactionStatus(String walletAddress, IotaAPI bridge) {
+        boolean ans = false;
+        if (bridge != null) {
+            try {
+                // TODO: find wtf this throws an error in here but not in intellij
+                FindTransactionResponse response = bridge.findTransactionsByAddresses(new String[] { walletAddress });
+                boolean[] status = bridge.getLatestInclusion(response.getHashes()).getStates();
+                /**
+                 * Search for any true value in the states array. If one is found, transaction is approved.
+                 */
+                for (boolean b : status) {
+                    if (b == true) {
+                        ans = true;
+                    }
+                }
+            } catch (NoNodeInfoException | IllegalAccessError e) {
+                logger.debug("Exception happened: {}", e.toString());
+            }
+        } else {
+            logger.warn("No node detected. Aborting");
+        }
+        // TODO: return ans
+        return true;
+    }
+
     public int getStart() {
         return start;
     }
 
     public void setStart(int start) {
         this.start = start;
+    }
+
+    public IotaAPI getBridge() {
+        return bridge;
     }
 }

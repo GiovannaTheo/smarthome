@@ -209,13 +209,12 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
         boolean success = false;
         if (!root.isEmpty()) {
             JsonParser parser = new JsonParser();
-            if (this.utils != null) {
-                JsonObject resp = parser.parse(utils.fetchFromTangle(refresh, root, mode, key)).getAsJsonObject();
-                if (resp.size() != 0) {
-                    root = resp.get("NEXTROOT").getAsString();
-                    data = resp.entrySet().iterator().next().getValue().getAsJsonArray();
-                    success = true;
-                }
+            // IotaUtils mamUtils = new IotaUtils("https", "nodes.testnet.iota.org", 443);
+            JsonObject resp = parser.parse(utils.fetchFromTangle(refresh, root, mode, key)).getAsJsonObject();
+            if (resp.size() != 0) {
+                root = resp.get("NEXTROOT").getAsString();
+                data = resp.entrySet().iterator().next().getValue().getAsJsonArray();
+                success = true;
             }
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, "Could not fetch data");

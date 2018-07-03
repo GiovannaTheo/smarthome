@@ -67,7 +67,7 @@ public class IotaMetadataProvider implements MetadataConfigDescriptionProvider {
                                         new ParameterOption("restricted", "Restricted") //
                                 ).collect(toList())).build(), //
                         create("key", Type.TEXT).withLabel("Private Key").withDescription(
-                                "Leave blank for non-restricted mode, otherwise enter the private key you want to use. If using the auto-compensation mechanism, leave it blank too since the client choses the password")
+                                "Leave blank for non-restricted mode, otherwise enter the private key you want to use. If using the auto-compensation mechanism, the password will be overwritten by the one chosen by the client")
                                 .build(), //
                         create("seed", Type.TEXT).withLabel("Existing Seed Address").withDescription(
                                 "Leave blank to publish on a new root. Insert an existing root address to publish on an existing stream")

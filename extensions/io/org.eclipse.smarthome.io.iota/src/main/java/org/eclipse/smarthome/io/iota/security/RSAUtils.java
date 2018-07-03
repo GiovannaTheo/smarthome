@@ -12,6 +12,7 @@
  */
 package org.eclipse.smarthome.io.iota.security;
 
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
@@ -20,8 +21,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
+import java.security.spec.RSAPrivateKeySpec;
+import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
 
 import javax.crypto.BadPaddingException;
@@ -53,29 +54,31 @@ public class RSAUtils {
     }
 
     /**
-     * Encrypts a given plaintext with a given base64-encoded public key
+     * Encrypt data given the public key
      *
-     * @param data      - the plaintext
-     * @param publicKey - the base64-encoded public key
-     * @return the ciphertext
+     * @param data
+     * @param modulus
+     * @param exponent
+     * @return
      * @throws BadPaddingException
      * @throws IllegalBlockSizeException
      * @throws InvalidKeyException
      * @throws NoSuchPaddingException
      * @throws NoSuchAlgorithmException
      */
-    public String encrypt(String data, String base64publicKey) throws BadPaddingException, IllegalBlockSizeException,
-            InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
+    public String encrypt(String data, BigInteger modulus, BigInteger exponent) throws BadPaddingException,
+            IllegalBlockSizeException, InvalidKeyException, NoSuchPaddingException, NoSuchAlgorithmException {
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, getPublicKeyX509(base64publicKey));
+        cipher.init(Cipher.ENCRYPT_MODE, getPublicKeyX509(modulus, exponent));
         return Base64.getEncoder().encodeToString(cipher.doFinal(data.getBytes()));
     }
 
     /**
-     * Decrypts a given ciphertext with a given base64-encoded private key
+     * Decrypt data given the private key
      *
-     * @param data             - the ciphertext
-     * @param base64PrivateKey - the base64-encoded private key
+     * @param data
+     * @param modulus
+     * @param exponent
      * @return
      * @throws NoSuchPaddingException
      * @throws NoSuchAlgorithmException
@@ -83,27 +86,26 @@ public class RSAUtils {
      * @throws BadPaddingException
      * @throws IllegalBlockSizeException
      */
-    public String decrypt(String data, String base64PrivateKey) throws NoSuchPaddingException, NoSuchAlgorithmException,
-            InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
+    public String decrypt(String data, BigInteger modulus, BigInteger exponent) throws NoSuchPaddingException,
+            NoSuchAlgorithmException, InvalidKeyException, BadPaddingException, IllegalBlockSizeException {
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
-        cipher.init(Cipher.DECRYPT_MODE, getPrivateKeyPKCS8(base64PrivateKey));
+        cipher.init(Cipher.DECRYPT_MODE, getPrivateKeyPKCS8(modulus, exponent));
         return new String(cipher.doFinal(Base64.getDecoder().decode(data.getBytes())));
     }
 
     /**
-     * RSA key-gen generates X509 encoded public keys. Use this method to retrieve the X509
-     * encoded public key given its "readable" base64 encoded String.
+     * Returns the publickey object from the modulus and exponent
      *
-     * @param base64PublicKey the public key base64 encoded
-     * @return the X509 encoded public key
+     * @param modulus
+     * @param exponent
+     * @return
      */
-    public PublicKey getPublicKeyX509(String base64PublicKey) {
+    public PublicKey getPublicKeyX509(BigInteger modulus, BigInteger exponent) {
         PublicKey publicKey = null;
         try {
-            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(Base64.getDecoder().decode(base64PublicKey.getBytes()));
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            publicKey = keyFactory.generatePublic(keySpec);
-            return publicKey;
+            RSAPublicKeySpec spec = new RSAPublicKeySpec(modulus, exponent);
+            KeyFactory factory = KeyFactory.getInstance("RSA");
+            publicKey = factory.generatePublic(spec);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             logger.debug("Exception happened: {}", e.toString());
         }
@@ -111,27 +113,20 @@ public class RSAUtils {
     }
 
     /**
-     * RSA key-gen generates PKCS8 encoded private keys. Use this method to retrieve the PKCS8
-     * encoded private key given its "readable" base64 encoded String.
-     *
-     * @param base64PrivateKey the private key base64 encoded
-     * @return the PKCS8 encoded private key
+     * Returns the privatekey object from the modulus and exponent
+     * 
+     * @param modulus
+     * @param exponent
+     * @return
      */
-    public PrivateKey getPrivateKeyPKCS8(String base64PrivateKey) {
+    public PrivateKey getPrivateKeyPKCS8(BigInteger modulus, BigInteger exponent) {
         PrivateKey privateKey = null;
-        PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(base64PrivateKey.getBytes()));
-        KeyFactory keyFactory = null;
+        RSAPrivateKeySpec spec = new RSAPrivateKeySpec(modulus, exponent);
         try {
-            keyFactory = KeyFactory.getInstance("RSA");
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        try {
-            if (keyFactory != null) {
-                privateKey = keyFactory.generatePrivate(keySpec);
-            }
-        } catch (InvalidKeySpecException e) {
-            e.printStackTrace();
+            KeyFactory factory = KeyFactory.getInstance("RSA");
+            privateKey = factory.generatePrivate(spec);
+        } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+            logger.debug("Exception happened: {}", e.toString());
         }
         return privateKey;
     }
@@ -142,14 +137,6 @@ public class RSAUtils {
 
     public PublicKey getPublicKey() {
         return publicKey;
-    }
-
-    public String getPrivateKeyBase64() {
-        return Base64.getEncoder().encodeToString(privateKey.getEncoded());
-    }
-
-    public String getPublicKeyBase64() {
-        return Base64.getEncoder().encodeToString(publicKey.getEncoded());
     }
 
 }

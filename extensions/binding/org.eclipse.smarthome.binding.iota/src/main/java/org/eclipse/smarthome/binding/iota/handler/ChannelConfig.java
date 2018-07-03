@@ -30,6 +30,11 @@ public class ChannelConfig {
     String stateTopic;
     String transformationPattern;
 
+    String root;
+    String key;
+    double threshold;
+    String ownkey;
+
     BigDecimal min = BigDecimal.valueOf(0);
     BigDecimal max = BigDecimal.valueOf(100);
     BigDecimal step = BigDecimal.valueOf(1);

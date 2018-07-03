@@ -22,6 +22,7 @@ Import-Package:
  org.eclipse.smarthome.core.types,
  org.eclipse.smarthome.core.util,
  org.eclipse.smarthome.io.iota.internal,
+ org.eclipse.smarthome.io.iota.security,
  org.osgi.framework,
  org.slf4j
 Service-Component: OSGI-INF/*.xml

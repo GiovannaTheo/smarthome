@@ -65,7 +65,7 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
     private int refresh = 0;
     private int port = 443;
     private String protocol = "https";
-    private String host = "nodes.iota.cafe";
+    private String host = "iotanode.be";
     ScheduledFuture<?> refreshJob;
     IotaItemStateChangeListener stateListener;
 
@@ -177,6 +177,7 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
             }
             if (balanceAPI != null) {
                 balance = Double.parseDouble(balanceAPI.getBalances()[0]) / 1000000;
+                logger.debug("Balance detected: value is {} Miota", balance);
             }
             config.processMessage(String.valueOf(balance));
             if (channelUIDtoBalanceMap.containsKey(channel.getUID())) {
@@ -194,7 +195,8 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
                             String tag = transactions.get(0).getTag();
                             try {
                                 RSAUtils rsa = new RSAUtils();
-                                String password = rsa.decrypt(tag, stateListener.getSeedToRSAKeys().get(seed)[1]);
+                                String password = rsa.decrypt(tag, stateListener.getSeedToRSAKeys().get(seed)[2],
+                                        stateListener.getSeedToRSAKeys().get(seed)[3]);
                                 // Updating password for the next push
                                 stateListener.getSeedToPrivateKeyMap().put(seed, password);
                             } catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException

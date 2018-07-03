@@ -13,7 +13,10 @@
 package org.eclipse.smarthome.io.iota.metadata;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
+import java.security.interfaces.RSAPrivateKey;
+import java.security.interfaces.RSAPublicKey;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.eclipse.smarthome.core.common.registry.RegistryChangeListener;
@@ -160,8 +163,11 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                              */
 
                                             RSAUtils rsa = new RSAUtils();
-                                            stateListener.getSeedToRSAKeys().put(seed, new String[] {
-                                                    rsa.getPublicKeyBase64(), rsa.getPrivateKeyBase64() });
+                                            stateListener.getSeedToRSAKeys().put(seed, new BigInteger[] {
+                                                    ((RSAPublicKey) rsa.getPublicKey()).getModulus(),
+                                                    ((RSAPublicKey) rsa.getPublicKey()).getPublicExponent(),
+                                                    ((RSAPrivateKey) rsa.getPrivateKey()).getModulus(),
+                                                    ((RSAPrivateKey) rsa.getPrivateKey()).getPrivateExponent() });
 
                                         } else {
                                             logger.warn("Wallet address cannot be empty. Please correct your entries.");

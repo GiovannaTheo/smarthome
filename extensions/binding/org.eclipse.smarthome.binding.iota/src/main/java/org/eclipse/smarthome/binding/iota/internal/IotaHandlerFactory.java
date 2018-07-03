@@ -18,6 +18,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.binding.iota.IotaBindingConstants;
 import org.eclipse.smarthome.binding.iota.handler.IotaBridgeHandler;
+import org.eclipse.smarthome.binding.iota.handler.IotaPaymentThingHandler;
 import org.eclipse.smarthome.binding.iota.handler.IotaThingHandler;
 import org.eclipse.smarthome.binding.iota.handler.TransformationServiceProvider;
 import org.eclipse.smarthome.core.thing.Bridge;
@@ -41,8 +42,9 @@ import com.google.common.collect.Sets;
 @Component(service = ThingHandlerFactory.class, name = "IotaHandlerFactory")
 public class IotaHandlerFactory extends BaseThingHandlerFactory implements TransformationServiceProvider {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Sets
-            .newHashSet(IotaBindingConstants.THING_TYPE_BRIDGE, IotaBindingConstants.THING_TYPE_IOTA);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Sets.newHashSet(
+            IotaBindingConstants.THING_TYPE_BRIDGE, IotaBindingConstants.THING_TYPE_IOTA,
+            IotaBindingConstants.THING_TYPE_IOTA_PAYMENT);
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -55,6 +57,10 @@ public class IotaHandlerFactory extends BaseThingHandlerFactory implements Trans
 
         if (IotaBindingConstants.THING_TYPE_IOTA.equals(thingTypeUID)) {
             return new IotaThingHandler(thing, this);
+        }
+
+        if (IotaBindingConstants.THING_TYPE_IOTA_PAYMENT.equals(thingTypeUID)) {
+            return new IotaPaymentThingHandler(thing);
         }
 
         if (IotaBindingConstants.THING_TYPE_BRIDGE.equals(thingTypeUID)) {

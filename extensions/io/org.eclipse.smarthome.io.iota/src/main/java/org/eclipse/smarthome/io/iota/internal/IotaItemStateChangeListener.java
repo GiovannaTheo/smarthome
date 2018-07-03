@@ -13,6 +13,7 @@
 package org.eclipse.smarthome.io.iota.internal;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -54,7 +55,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
     private final HashMap<String, Boolean> seedToHandshakeMap = new HashMap<>();
     private final HashMap<String, String> walletToSeedMap = new HashMap<>();
     private final HashMap<String, Double> walletToPayment = new HashMap<>();
-    private final HashMap<String, String[]> seedToRSAKeys = new HashMap<>();
+    private final HashMap<String, BigInteger[]> seedToRSAKeys = new HashMap<>();
     private IotaService service;
 
     @Override
@@ -117,10 +118,13 @@ public class IotaItemStateChangeListener implements StateChangeListener {
 
                                             JsonObject handshakeJson = new JsonObject();
                                             String wallet = metadata.getConfiguration().get("wallet").toString();
-                                            String publicKey = seedToRSAKeys.get(seed)[0];
+                                            handshakeJson.addProperty("Type", "handshake");
                                             handshakeJson.addProperty("Wallet", wallet);
                                             handshakeJson.addProperty("Price", price);
-                                            handshakeJson.addProperty("Public RSA", publicKey);
+                                            JsonObject rsaPublic = new JsonObject();
+                                            rsaPublic.addProperty("Modulus", seedToRSAKeys.get(seed)[0].toString());
+                                            rsaPublic.addProperty("Exponent", seedToRSAKeys.get(seed)[1].toString());
+                                            handshakeJson.add("RSA", rsaPublic);
                                             seedToUtilsMap.get(seed).startHandshake(handshakeJson);
                                             seedToHandshakeMap.put(seed, true); // indicating that hanshake is completed
 
@@ -272,7 +276,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
         return walletToPayment;
     }
 
-    public HashMap<String, String[]> getSeedToRSAKeys() {
+    public HashMap<String, BigInteger[]> getSeedToRSAKeys() {
         return seedToRSAKeys;
     }
 

@@ -32,9 +32,51 @@
       </config-description>
    </thing-type>
    
+   <thing-type id="automaticPayment" extensible="textPayment">
+      <supported-bridge-type-refs>
+          <bridge-type-ref id="bridge"/>
+      </supported-bridge-type-refs>
+      <label>Automatic Payment</label>
+      <description>This thing allows automatic compensation for the data providers that share a restricted and charged MAM stream. Once the fees paid, a Topic thing will be automatically created with the fetched data.</description>
+      <config-description>
+         
+         <parameter name="refresh" type="integer" min="60">
+            <label>Refresh interval</label>
+            <description>Specifies the refresh interval in seconds.</description>
+         </parameter>
+        
+      </config-description>
+   </thing-type>
+   
+   <channel-type id="textPayment">
+        <item-type>String</item-type>
+        <label>New payment</label>
+        <state readOnly="true"> </state>
+        <config-description>
+        <parameter name="root" type="text" required="true">
+            <label>Root Address</label>
+            <description>The root address from which item states should be retrieved from</description>
+         </parameter>
+         <parameter name="key" type="text" required="true">
+            <label>Private Key For Handshake Packet</label>
+            <description>The private key used by the data provider for the first data stream</description>
+         </parameter>
+         <parameter name="ownkey" type="text" required="false">
+            <label>Private Key For Next Messages</label>
+            <description>Here you can choose your own private key that will be used by the data provider (only data shared by the io.iota bundle) for the next pushes. If left blank, the password will remain the provider's one</description>
+         </parameter>
+         <parameter name="threshold" type="decimal">
+            <label>Threshold in Miota</label>
+            <description>Specifies the threshold under which you agree automatic payments to be made.</description>
+            <default>0.0</default>
+         </parameter>
+        </config-description>
+    </channel-type>
+   
    <channel-type id="text">
         <item-type>String</item-type>
         <label>Text value</label>
+        <state readOnly="true"> </state>
         <config-description>
             <parameter name="stateTopic" type="text" required="true">
                 <label>IOTA state topic</label>
@@ -53,6 +95,7 @@
     <channel-type id="number">
         <item-type>Number</item-type>
         <label>Number value</label>
+        <state readOnly="true" pattern="%.3f"> </state>
         <config-description>
             <parameter name="stateTopic" type="text" required="true">
                 <label>IOTA state topic</label>
@@ -82,6 +125,7 @@
     <channel-type id="percentage">
         <item-type>Dimmer</item-type>
         <label>Percentage value</label>
+        <state readOnly="true" pattern="%.2f %"> </state>
         <config-description>
             <parameter name="stateTopic" type="text" required="true">
                 <label>IOTA state topic</label>
@@ -121,6 +165,7 @@
     <channel-type id="onoff">
         <item-type>Switch</item-type>
         <label>On/Off value</label>
+        <state readOnly="true"> </state>
         <config-description>
             <parameter name="stateTopic" type="text" required="true">
                 <label>IOTA state topic</label>
