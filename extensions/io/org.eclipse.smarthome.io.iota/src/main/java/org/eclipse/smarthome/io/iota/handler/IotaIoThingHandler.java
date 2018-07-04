@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 
 import jota.IotaAPI;
 import jota.dto.response.GetBalancesResponse;
+import jota.error.ArgumentException;
 import jota.model.Transaction;
 
 /**
@@ -172,7 +173,7 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
             GetBalancesResponse balanceAPI = null;
             try {
                 balanceAPI = bridge.getBalances(100, Arrays.asList(new String[] { config.address }));
-            } catch (IllegalAccessError e) {
+            } catch (IllegalAccessError | ArgumentException e) {
                 logger.debug("Error: invalid or empty wallet: {}", e.getMessage());
             }
             if (balanceAPI != null) {
@@ -180,35 +181,51 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
                 logger.debug("Balance detected: value is {} Miota", balance);
             }
             config.processMessage(String.valueOf(balance));
+            String tmp = stateListener.getWalletToSeedMap().get(config.address);
+            /**
+             * TEST ONLY
+             */
+            logger.debug("----------- SEED TO PUT AT TRUE: {}", tmp);
+            stateListener.getSeedToPaidMap().put(tmp, true); // TODO: REMOVE
+            /**
+             * TEST ONLY
+             */
             if (channelUIDtoBalanceMap.containsKey(channel.getUID())) {
                 if (channelUIDtoBalanceMap.get(channel.getUID()) != balance) {
-                    List<Transaction> transactions = bridge.findTransactionObjects(new String[] { config.address });
-                    String walletAddress = stateListener.getWalletToSeedMap().get(config.address);
-                    String seed = stateListener.getWalletToSeedMap().get(walletAddress);
-                    if (Math.abs(balance - channelUIDtoBalanceMap.get(channel.getUID())) == stateListener
-                            .getWalletToPayment().get(config.address)) {
-                        logger.debug("Payment received. Processing MAM stream...");
-                        if (transactions.get(0).getTag() != null && !transactions.get(0).getTag().isEmpty()) {
-                            logger.debug("Decrypting password for MAM stream...");
-                            // Tag should be the password RSA-encrypted in base64 format. The password must consist of
-                            // upper-case letters A-Z only (MAM restriction)
-                            String tag = transactions.get(0).getTag();
-                            try {
-                                RSAUtils rsa = new RSAUtils();
-                                String password = rsa.decrypt(tag, stateListener.getSeedToRSAKeys().get(seed)[2],
-                                        stateListener.getSeedToRSAKeys().get(seed)[3]);
-                                // Updating password for the next push
-                                stateListener.getSeedToPrivateKeyMap().put(seed, password);
-                            } catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException
-                                    | BadPaddingException | IllegalBlockSizeException e) {
-                                logger.debug("Exception happened: {}", e.toString());
+                    List<Transaction> transactions = null;
+                    try {
+                        transactions = bridge.findTransactionObjectsByAddresses(new String[] { config.address });
+                        String seed = stateListener.getWalletToSeedMap().get(config.address);
+                        if (Math.abs(balance - channelUIDtoBalanceMap.get(channel.getUID())) == stateListener
+                                .getWalletToPayment().get(config.address)) {
+                            logger.debug("Payment received. Processing MAM stream...");
+                            if (transactions.get(0).getTag() != null && !transactions.get(0).getTag().isEmpty()) {
+                                logger.debug("Decrypting password for MAM stream...");
+                                // Tag should be the password RSA-encrypted. The password must consist
+                                // of upper-case letters A-Z only (MAM restriction)
+                                String tag = transactions.get(0).getTag();
+                                try {
+                                    RSAUtils rsa = new RSAUtils();
+                                    String password = rsa.decrypt(tag, stateListener.getSeedToRSAKeys().get(seed)[2],
+                                            stateListener.getSeedToRSAKeys().get(seed)[3]);
+                                    // Updating password for the next push
+                                    stateListener.getSeedToPrivateKeyMap().put(seed, password);
+                                } catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException
+                                        | BadPaddingException | IllegalBlockSizeException e) {
+                                    logger.debug(
+                                            "Exception happened: {}. Password will remain the one chosen by the provider",
+                                            e.toString());
+                                }
+                            } else {
+                                logger.warn(
+                                        "No password was provided by the client. The password for the MAM stream is therefore the one chosen by the publiser");
                             }
-                        } else {
-                            logger.warn(
-                                    "No password was provided by the client. The password for the MAM stream is therefore the one chosen by the publiser");
+                            stateListener.getSeedToPaidMap().put(seed, true);
                         }
-                        stateListener.getSeedToPaidMap().put(seed, true);
+                    } catch (ArgumentException e) {
+                        logger.debug("Error: invalid or empty wallet: {}", e.getMessage());
                     }
+
                 } else {
                     // Balance is identical
                 }

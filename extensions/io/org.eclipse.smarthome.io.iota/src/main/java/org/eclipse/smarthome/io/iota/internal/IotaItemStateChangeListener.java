@@ -125,7 +125,8 @@ public class IotaItemStateChangeListener implements StateChangeListener {
                                             rsaPublic.addProperty("Modulus", seedToRSAKeys.get(seed)[0].toString());
                                             rsaPublic.addProperty("Exponent", seedToRSAKeys.get(seed)[1].toString());
                                             handshakeJson.add("RSA", rsaPublic);
-                                            seedToUtilsMap.get(seed).startHandshake(handshakeJson);
+                                            seedToUtilsMap.get(seed).startHandshake(handshakeJson,
+                                                    seedToPrivateKeyMap.get(seed));
                                             seedToHandshakeMap.put(seed, true); // indicating that hanshake is completed
 
                                         } else {

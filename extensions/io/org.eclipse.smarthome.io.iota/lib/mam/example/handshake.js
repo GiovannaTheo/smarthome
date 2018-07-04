@@ -3,6 +3,8 @@ const IOTA = require('iota.lib.js')
 const iota = new IOTA({ provider: process.argv[2] })
 let states = iota.utils.toTrytes((process.argv[3]).toUpperCase())
 
+// USAGE: node publish.js "https://nodes.testnet.iota.org:443" "json object" "seed" "password"
+
 // Initialise MAM State - PUBLIC
 
 let mamState = undefined
@@ -10,11 +12,11 @@ let obj = undefined
 
 // Publish to tangle - public mode
 async function handshake() {
-    mamState = Mam.init(iota)
+    mamState = Mam.init(iota, process.argv[4])
     mamState = Mam.changeMode(
         mamState,
         'restricted',
-        'PASSWORD' //default password for first packet, will be changed once payment is made
+        process.argv[5].toUpperCase()
     )
 
     let message = Mam.create(mamState, states)

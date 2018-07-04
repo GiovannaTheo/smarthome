@@ -34,8 +34,11 @@ import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
+import org.eclipse.smarthome.core.thing.ThingRegistry;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
+import org.eclipse.smarthome.core.thing.ThingTypeUID;
+import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.State;
@@ -59,14 +62,16 @@ public class IotaPaymentThingHandler extends BaseThingHandler implements Channel
     private final Map<ChannelUID, ChannelConfig> channelDataByChannelUID = new HashMap<>();
     private final Map<ChannelUID, String> walletByChannelUID = new HashMap<>();
     private JsonObject data = new JsonObject();
-    private int refresh = 0;
+    private int refresh;
     private String nextroot;
     private final String mode = "restricted";
     private IotaUtils utils;
     ScheduledFuture<?> refreshJob;
+    private final ThingRegistry thingRegistry;
 
-    public IotaPaymentThingHandler(Thing thing) {
+    public IotaPaymentThingHandler(Thing thing, ThingRegistry thingRegistry) {
         super(thing);
+        this.thingRegistry = thingRegistry;
     }
 
     @Override
@@ -198,9 +203,15 @@ public class IotaPaymentThingHandler extends BaseThingHandler implements Channel
 
                                 success = false;
                             } else {
-                                logger.debug("----------------- MAKE PAYMENT HERE");
-                                logger.debug("----------------- PAYMENT FOR WA: {}", wallet);
-                                logger.debug("----------------- CHOOSEN PASS: {}", encryptedPassword);
+
+                                /**
+                                 * Processing payment on the Tangle
+                                 */
+
+                                // TODO: init transaction
+
+                                logger.debug("Payment on wallet {}. Chosen encrypted password: {}", wallet,
+                                        encryptedPassword);
                                 walletByChannelUID.put(channelUID, wallet);
                                 success = true;
                             }
@@ -228,6 +239,32 @@ public class IotaPaymentThingHandler extends BaseThingHandler implements Channel
         boolean status = utils.checkTransactionStatus(wallet, utils.getBridge());
         if (status) {
             updatePaymentStatus(channelUID, "success");
+
+            ChannelConfig config = channelDataByChannelUID.get(channelUID);
+            ThingTypeUID thingTypeUID = new ThingTypeUID("iota", "topic");
+            ThingUID thingUIDObject = new ThingUID("iota", "topic", channelUID.getId());
+            ThingUID bridgeUID = this.getThing().getBridgeUID();
+            String label = "Topic";
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("root", nextroot);
+            properties.put("refresh", 60);
+            properties.put("mode", mode);
+            properties.put("key", config.ownkey);
+            Configuration configuration = new Configuration(properties);
+
+            /**
+             * Payment is successfull, create a topic thing
+             */
+
+            // TODO: create topic thing
+            this.thingRegistry.createThingOfType(thingTypeUID, thingUIDObject, bridgeUID, label, configuration);
+
+            /**
+             * Payment is successfull, removing channel
+             */
+
+            // TODO: remove channel from the channelMAP and from the thing
+
         } else {
             updatePaymentStatus(channelUID, "processing...");
         }
@@ -249,4 +286,5 @@ public class IotaPaymentThingHandler extends BaseThingHandler implements Channel
     public void channelStateUpdated(ChannelUID channelUID, State value) {
         updateState(channelUID.getId(), value);
     }
+
 }

@@ -28,4 +28,5 @@ public class IotaConfiguration {
     public int refresh;
     public String mode;
     public String key;
+
 }

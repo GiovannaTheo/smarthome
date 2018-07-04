@@ -24,7 +24,7 @@ import com.google.gson.JsonParser;
 
 import jota.IotaAPI;
 import jota.dto.response.FindTransactionResponse;
-import jota.error.NoNodeInfoException;
+import jota.error.ArgumentException;
 import jota.utils.InputValidator;
 
 /**
@@ -160,11 +160,11 @@ public class IotaUtils {
         }
     }
 
-    public void startHandshake(JsonObject handshakePacket) {
+    public void startHandshake(JsonObject handshakePacket, String key) {
         JsonParser parser = new JsonParser();
         String[] cmd = new String[] { "/usr/local/bin/node", PATH + "handshake.js",
                 bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
-                handshakePacket.toString() };
+                handshakePacket.toString(), seed, key };
         try {
             logger.debug(
                     "Doing proof of work to attach data to the Tangle.... Handshake protocol for auto-compensation mechanism");
@@ -198,7 +198,6 @@ public class IotaUtils {
         boolean ans = false;
         if (bridge != null) {
             try {
-                // TODO: find wtf this throws an error in here but not in intellij
                 FindTransactionResponse response = bridge.findTransactionsByAddresses(new String[] { walletAddress });
                 boolean[] status = bridge.getLatestInclusion(response.getHashes()).getStates();
                 /**
@@ -209,14 +208,13 @@ public class IotaUtils {
                         ans = true;
                     }
                 }
-            } catch (NoNodeInfoException | IllegalAccessError e) {
+            } catch (IllegalAccessError | ArgumentException e) {
                 logger.debug("Exception happened: {}", e.toString());
             }
         } else {
             logger.warn("No node detected. Aborting");
         }
-        // TODO: return ans
-        return true;
+        return ans;
     }
 
     public int getStart() {

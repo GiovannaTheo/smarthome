@@ -23,6 +23,7 @@ import org.eclipse.smarthome.binding.iota.handler.IotaThingHandler;
 import org.eclipse.smarthome.binding.iota.handler.TransformationServiceProvider;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Thing;
+import org.eclipse.smarthome.core.thing.ThingRegistry;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
@@ -30,6 +31,7 @@ import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
 import org.eclipse.smarthome.core.transform.TransformationHelper;
 import org.eclipse.smarthome.core.transform.TransformationService;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
 
 import com.google.common.collect.Sets;
 
@@ -41,6 +43,8 @@ import com.google.common.collect.Sets;
  */
 @Component(service = ThingHandlerFactory.class, name = "IotaHandlerFactory")
 public class IotaHandlerFactory extends BaseThingHandlerFactory implements TransformationServiceProvider {
+
+    private ThingRegistry thingRegistry;
 
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Sets.newHashSet(
             IotaBindingConstants.THING_TYPE_BRIDGE, IotaBindingConstants.THING_TYPE_IOTA,
@@ -60,7 +64,7 @@ public class IotaHandlerFactory extends BaseThingHandlerFactory implements Trans
         }
 
         if (IotaBindingConstants.THING_TYPE_IOTA_PAYMENT.equals(thingTypeUID)) {
-            return new IotaPaymentThingHandler(thing);
+            return new IotaPaymentThingHandler(thing, this.thingRegistry);
         }
 
         if (IotaBindingConstants.THING_TYPE_BRIDGE.equals(thingTypeUID)) {
@@ -74,6 +78,11 @@ public class IotaHandlerFactory extends BaseThingHandlerFactory implements Trans
     @Override
     public TransformationService getTransformationService(@NonNull String type) {
         return TransformationHelper.getTransformationService(bundleContext, type);
+    }
+
+    @Reference
+    protected void setThingRegistry(ThingRegistry thingRegistry) {
+        this.thingRegistry = thingRegistry;
     }
 
 }

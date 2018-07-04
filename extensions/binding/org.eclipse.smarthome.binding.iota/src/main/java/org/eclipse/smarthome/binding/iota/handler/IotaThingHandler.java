@@ -209,7 +209,6 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
         boolean success = false;
         if (!root.isEmpty()) {
             JsonParser parser = new JsonParser();
-            // IotaUtils mamUtils = new IotaUtils("https", "nodes.testnet.iota.org", 443);
             JsonObject resp = parser.parse(utils.fetchFromTangle(refresh, root, mode, key)).getAsJsonObject();
             if (resp.size() != 0) {
                 root = resp.get("NEXTROOT").getAsString();
