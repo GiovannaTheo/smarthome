@@ -58,6 +58,7 @@ import com.google.gson.JsonParser;
 public class IotaThingHandler extends BaseThingHandler implements ChannelStateUpdateListener {
 
     // TODO: add tests
+    // TODO: solve the JSONObject error at topic creation
 
     private final Logger logger = LoggerFactory.getLogger(IotaThingHandler.class);
     private TransformationServiceProvider transformationServiceProvider;
@@ -209,11 +210,20 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
         boolean success = false;
         if (!root.isEmpty()) {
             JsonParser parser = new JsonParser();
-            JsonObject resp = parser.parse(utils.fetchFromTangle(refresh, root, mode, key)).getAsJsonObject();
-            if (resp.size() != 0) {
-                root = resp.get("NEXTROOT").getAsString();
-                data = resp.entrySet().iterator().next().getValue().getAsJsonArray();
-                success = true;
+            JsonObject resp = null;
+            try {
+                resp = parser.parse(utils.fetchFromTangle(refresh, root, mode, key)).getAsJsonObject();
+            } catch (IllegalStateException e) {
+                logger.debug(
+                        "Exception happened: {}. The stream might not have been updated on the provider side, please wait...",
+                        e.toString());
+            }
+            if (resp != null) {
+                if (resp.size() != 0) {
+                    root = resp.get("NEXTROOT").getAsString();
+                    data = resp.entrySet().iterator().next().getValue().getAsJsonArray();
+                    success = true;
+                }
             }
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, "Could not fetch data");

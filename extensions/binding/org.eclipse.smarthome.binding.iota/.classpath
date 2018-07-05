@@ -3,6 +3,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="src" path="src/main/java"/>
-	<classpathentry kind="lib" path="lib/jota-0.9.6-SNAPSHOT-jar-with-dependencies.jar" sourcepath="lib/jota-0.9.6-SNAPSHOT-jar-with-dependencies.jar"/>
+	<classpathentry kind="lib" path="lib/jota-0.9.11-SNAPSHOT-jar-with-dependencies.jar" sourcepath="lib/jota-0.9.11-SNAPSHOT-jar-with-dependencies.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

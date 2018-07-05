@@ -8,22 +8,22 @@
          <parameter name="protocol" type="text" required="true">
             <label>Protocol</label>
             <description>Defines the protocol used by IOTA API</description>
-            <default>https</default>
+            <default>http</default>
          </parameter>
          <parameter name="host" type="text" required="true">
             <label>Host</label>
             <description>Defines the host used by IOTA API</description>
-            <default>iotanode.be</default>
+            <default>localhost</default>
          </parameter>
          <parameter name="port" type="integer" required="true">
             <label>Port</label>
             <description>Defines the port used by IOTA API</description>
-            <default>443</default>
+            <default>14700</default>
          </parameter>
          <parameter name="refresh" type="integer" min="60">
             <label>Refresh interval</label>
             <description>Specifies the refresh interval in seconds.</description>
-            <default>300</default>
+            <default>60</default>
          </parameter>
       </config-description>
    </thing-type>

@@ -63,7 +63,7 @@ public class IotaUtils {
      * @param item   the item for which we want to publish data
      * @param state  the item's state
      */
-    protected void publishState(JsonElement states, String mode, String key) {
+    public void publishState(JsonElement states, String mode, String key) {
 
         String payload = states.toString();
         String[] param = null;
@@ -194,7 +194,7 @@ public class IotaUtils {
         return InputValidator.isValidSeed(seed);
     }
 
-    public boolean checkTransactionStatus(String walletAddress, IotaAPI bridge) {
+    public boolean checkTransactionStatus(String walletAddress) {
         boolean ans = false;
         if (bridge != null) {
             try {

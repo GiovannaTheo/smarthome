@@ -47,6 +47,7 @@ import jota.IotaAPI;
 import jota.dto.response.GetBalancesResponse;
 import jota.error.ArgumentException;
 import jota.model.Transaction;
+import jota.utils.TrytesConverter;
 
 /**
  * The {@link IotaIoThingHandler} is responsible for handling commands, which are
@@ -57,16 +58,15 @@ import jota.model.Transaction;
 public class IotaIoThingHandler extends BaseThingHandler implements ChannelStateUpdateListener {
 
     // TODO: add tests
-    // TODO: start MAM stream if change in balance is detected
 
     private final Logger logger = LoggerFactory.getLogger(IotaIoThingHandler.class);
 
     private final Map<ChannelUID, ChannelConfig> channelDataByChannelUID = new HashMap<>();
     private final Map<ChannelUID, Double> channelUIDtoBalanceMap = new HashMap<>();
     private int refresh = 0;
-    private int port = 443;
-    private String protocol = "https";
-    private String host = "iotanode.be";
+    private int port = 14700;
+    private String protocol = "http";
+    private String host = "localhost";
     ScheduledFuture<?> refreshJob;
     IotaItemStateChangeListener stateListener;
 
@@ -181,46 +181,85 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
                 logger.debug("Balance detected: value is {} Miota", balance);
             }
             config.processMessage(String.valueOf(balance));
-            String tmp = stateListener.getWalletToSeedMap().get(config.address);
-            /**
-             * TEST ONLY
-             */
-            logger.debug("----------- SEED TO PUT AT TRUE: {}", tmp);
-            stateListener.getSeedToPaidMap().put(tmp, true); // TODO: REMOVE
-            /**
-             * TEST ONLY
-             */
+
             if (channelUIDtoBalanceMap.containsKey(channel.getUID())) {
                 if (channelUIDtoBalanceMap.get(channel.getUID()) != balance) {
                     List<Transaction> transactions = null;
                     try {
                         transactions = bridge.findTransactionObjectsByAddresses(new String[] { config.address });
-                        String seed = stateListener.getWalletToSeedMap().get(config.address);
-                        if (Math.abs(balance - channelUIDtoBalanceMap.get(channel.getUID())) == stateListener
-                                .getWalletToPayment().get(config.address)) {
-                            logger.debug("Payment received. Processing MAM stream...");
-                            if (transactions.get(0).getTag() != null && !transactions.get(0).getTag().isEmpty()) {
-                                logger.debug("Decrypting password for MAM stream...");
-                                // Tag should be the password RSA-encrypted. The password must consist
-                                // of upper-case letters A-Z only (MAM restriction)
-                                String tag = transactions.get(0).getTag();
-                                try {
-                                    RSAUtils rsa = new RSAUtils();
-                                    String password = rsa.decrypt(tag, stateListener.getSeedToRSAKeys().get(seed)[2],
-                                            stateListener.getSeedToRSAKeys().get(seed)[3]);
-                                    // Updating password for the next push
-                                    stateListener.getSeedToPrivateKeyMap().put(seed, password);
-                                } catch (NoSuchAlgorithmException | InvalidKeyException | NoSuchPaddingException
-                                        | BadPaddingException | IllegalBlockSizeException e) {
-                                    logger.debug(
-                                            "Exception happened: {}. Password will remain the one chosen by the provider",
-                                            e.toString());
+
+                        for (Transaction t : transactions) {
+
+                            /**
+                             * In the transaction response, the last 9 char of the address are not shown, thus
+                             * we need to substract them
+                             */
+
+                            String add = config.address.substring(0, config.address.length() - 9);
+
+                            if (add.equals(t.getAddress())) {
+
+                                if (t.getValue() != 0) {
+
+                                    String seed = stateListener.getWalletToSeedMap().get(config.address);
+
+                                    if (Math.abs(
+                                            balance - channelUIDtoBalanceMap.get(channel.getUID())) == stateListener
+                                                    .getWalletToPayment().get(config.address)) {
+
+                                        logger.debug("Payment received. Processing MAM stream...");
+
+                                        /**
+                                         * Converts the trytes RSA encoded password into bytes and decodes it, if
+                                         * existing
+                                         */
+
+                                        String encryptedPasswordTrytes = t.getSignatureFragments();
+
+                                        int j = 0;
+                                        for (int i = encryptedPasswordTrytes.length() - 1; i > 0; i--) {
+                                            if (encryptedPasswordTrytes.charAt(i) == '9') {
+                                                j++;
+                                            } else {
+                                                break;
+                                            }
+                                        }
+                                        // Removing padded 9's and converting to string
+                                        String encryptedPassword = TrytesConverter.toString(encryptedPasswordTrytes
+                                                .substring(0, encryptedPasswordTrytes.length() - j));
+
+                                        if (encryptedPassword != null && !encryptedPassword.isEmpty()) {
+                                            try {
+                                                RSAUtils rsa = new RSAUtils();
+                                                logger.debug("Decrypting: {}", encryptedPassword);
+                                                String password = rsa.decrypt(encryptedPassword,
+                                                        stateListener.getSeedToRSAKeys().get(seed)[2],
+                                                        stateListener.getSeedToRSAKeys().get(seed)[3]);
+                                                logger.debug("Decrpyted password is: {}", password);
+                                                // Updating password for the next push
+                                                if (password != null && !password.isEmpty()) {
+                                                    stateListener.getSeedToPrivateKeyMap().put(seed, password);
+                                                }
+                                            } catch (NoSuchAlgorithmException | InvalidKeyException
+                                                    | NoSuchPaddingException | BadPaddingException
+                                                    | IllegalBlockSizeException e) {
+                                                logger.debug(
+                                                        "Exception happened: {}. Password will remain the one chosen by the provider",
+                                                        e.toString());
+                                            }
+                                        }
+
+                                        stateListener.getSeedToPaidMap().put(seed, true);
+                                        /**
+                                         * Releasing data
+                                         */
+                                        stateListener.getSeedToUtilsMap().get(seed).publishState(
+                                                stateListener.getSeedToJsonMap().get(seed).get("Items"), "restricted",
+                                                stateListener.getSeedToPrivateKeyMap().get(seed));
+                                        break;
+                                    }
                                 }
-                            } else {
-                                logger.warn(
-                                        "No password was provided by the client. The password for the MAM stream is therefore the one chosen by the publiser");
                             }
-                            stateListener.getSeedToPaidMap().put(seed, true);
                         }
                     } catch (ArgumentException e) {
                         logger.debug("Error: invalid or empty wallet: {}", e.getMessage());

@@ -38,7 +38,7 @@ public class IotaBridgeHandler extends BaseBridgeHandler {
     private final Logger logger = LoggerFactory.getLogger(IotaBridgeHandler.class);
     private int port = 443;
     private String protocol = "https";
-    private String host = "iotanode.be";
+    private String host = "nodes.testnet.iota.org";
     private String seed = null;
     private IotaUtils utils;
 
