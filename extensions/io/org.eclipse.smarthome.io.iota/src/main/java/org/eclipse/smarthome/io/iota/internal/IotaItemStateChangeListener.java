@@ -46,36 +46,36 @@ public class IotaItemStateChangeListener implements StateChangeListener {
 
     private final Logger logger = LoggerFactory.getLogger(IotaItemStateChangeListener.class);
     private IotaAPI bridge;
-    private final HashMap<String, JsonObject> seedToJsonMap = new HashMap<>();
-    private final HashMap<String, String> uidToSeedMap = new HashMap<>();
-    private final HashMap<String, Debouncer> seedToDebouncerMap = new HashMap<>();
-    private final HashMap<String, IotaUtils> seedToUtilsMap = new HashMap<>();
-    private final HashMap<String, String> seedToPrivateKeyMap = new HashMap<>();
-    private final HashMap<String, Boolean> seedToPaidMap = new HashMap<>();
-    private final HashMap<String, Boolean> seedToHandshakeMap = new HashMap<>();
-    private final HashMap<String, String> walletToSeedMap = new HashMap<>();
-    private final HashMap<String, Double> walletToPayment = new HashMap<>();
-    private final HashMap<String, BigInteger[]> seedToRSAKeys = new HashMap<>();
+    private final HashMap<String, JsonObject> jsonObjectBySeed = new HashMap<>();
+    private final HashMap<String, String> seedByUID = new HashMap<>();
+    private final HashMap<String, Debouncer> debouncerBySeed = new HashMap<>();
+    private final HashMap<String, IotaUtils> utilsBySeed = new HashMap<>();
+    private final HashMap<String, String> privateKeyBySeed = new HashMap<>();
+    private final HashMap<String, Boolean> paymentReceivedBySeed = new HashMap<>();
+    private final HashMap<String, Boolean> handshakeBySeed = new HashMap<>();
+    private final HashMap<String, String> seedByWallet = new HashMap<>();
+    private final HashMap<String, Double> paymentAmountByWallet = new HashMap<>();
+    private final HashMap<String, BigInteger[]> rsaKeysBySeed = new HashMap<>();
     private IotaService service;
 
     @Override
     public void stateChanged(@NonNull Item item, @NonNull State oldState, @NonNull State newState) {
         service.getMetadataRegistry().getAll().forEach(metadata -> {
             if (metadata.getUID().getItemName().equals(item.getName())) {
-                String seed = uidToSeedMap.get(item.getUID());
+                String seed = seedByUID.get(item.getUID());
 
-                if (seedToJsonMap.containsKey(seed)) {
+                if (jsonObjectBySeed.containsKey(seed)) {
                     /**
                      * Entries already exists. Updating the value in the json array
                      */
-                    JsonObject oldEntries = seedToJsonMap.get(seed);
+                    JsonObject oldEntries = jsonObjectBySeed.get(seed);
                     JsonObject newEntries = addToStates(item, newState, oldEntries);
-                    seedToJsonMap.put(seed, newEntries);
+                    jsonObjectBySeed.put(seed, newEntries);
                 } else {
                     /**
                      * New entry, creating a new json object
                      */
-                    seedToJsonMap.put(seed,
+                    jsonObjectBySeed.put(seed,
                             addToStates(item, newState, new Gson().fromJson("{\"Items\":[]}", JsonObject.class)));
                 }
 
@@ -90,7 +90,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
 
                 final double price = p;
 
-                Debouncer debouncer = seedToDebouncerMap.get(seed);
+                Debouncer debouncer = debouncerBySeed.get(seed);
 
                 if (debouncer != null) {
                     /**
@@ -104,11 +104,11 @@ public class IotaItemStateChangeListener implements StateChangeListener {
                             if (mode.equals("restricted")) {
                                 if (price == 0.0) {
                                     // Normal restricted mode with publisher-chosen password
-                                    seedToUtilsMap.get(seed).publishState(seedToJsonMap.get(seed).get("Items"), mode,
-                                            seedToPrivateKeyMap.get(seed));
+                                    utilsBySeed.get(seed).publishState(jsonObjectBySeed.get(seed).get("Items"), mode,
+                                            privateKeyBySeed.get(seed));
                                 } else {
                                     // Auto-compensation mechanism
-                                    if (seedToHandshakeMap.get(seed) == false) {
+                                    if (handshakeBySeed.get(seed) == false) {
                                         // Sending handshake packet
                                         if (!metadata.getConfiguration().get("wallet").toString().isEmpty()) {
 
@@ -122,26 +122,26 @@ public class IotaItemStateChangeListener implements StateChangeListener {
                                             handshakeJson.addProperty("Wallet", wallet);
                                             handshakeJson.addProperty("Price", price);
                                             JsonObject rsaPublic = new JsonObject();
-                                            rsaPublic.addProperty("Modulus", seedToRSAKeys.get(seed)[0].toString());
-                                            rsaPublic.addProperty("Exponent", seedToRSAKeys.get(seed)[1].toString());
+                                            rsaPublic.addProperty("Modulus", rsaKeysBySeed.get(seed)[0].toString());
+                                            rsaPublic.addProperty("Exponent", rsaKeysBySeed.get(seed)[1].toString());
                                             handshakeJson.add("RSA", rsaPublic);
-                                            seedToUtilsMap.get(seed).startHandshake(handshakeJson,
-                                                    seedToPrivateKeyMap.get(seed));
-                                            seedToHandshakeMap.put(seed, true); // indicating that hanshake is completed
+                                            utilsBySeed.get(seed).startHandshake(handshakeJson,
+                                                    privateKeyBySeed.get(seed));
+                                            handshakeBySeed.put(seed, true); // indicating that hanshake is completed
 
                                         } else {
                                             logger.warn("Wallet address cannot be empty. Aborting.");
                                         }
                                     }
 
-                                    if (seedToPaidMap.get(seed) == true) {
+                                    if (paymentReceivedBySeed.get(seed) == true) {
                                         // Data have been paid. Processing normally
-                                        seedToUtilsMap.get(seed).publishState(seedToJsonMap.get(seed).get("Items"),
-                                                mode, seedToPrivateKeyMap.get(seed));
+                                        utilsBySeed.get(seed).publishState(jsonObjectBySeed.get(seed).get("Items"),
+                                                mode, privateKeyBySeed.get(seed));
                                     }
                                 }
                             } else {
-                                seedToUtilsMap.get(seed).publishState(seedToJsonMap.get(seed).get("Items"), mode, null);
+                                utilsBySeed.get(seed).publishState(jsonObjectBySeed.get(seed).get("Items"), mode, null);
                             }
                         }
                     }, 1000, TimeUnit.MILLISECONDS);
@@ -228,9 +228,9 @@ public class IotaItemStateChangeListener implements StateChangeListener {
      */
     public void removeItemFromJson(@NonNull Item item) {
 
-        String seed = uidToSeedMap.get(item.getUID());
+        String seed = seedByUID.get(item.getUID());
         if (seed != null && !seed.isEmpty()) {
-            for (Iterator<JsonElement> it = seedToJsonMap.get(seed).get("Items").getAsJsonArray().iterator(); it
+            for (Iterator<JsonElement> it = jsonObjectBySeed.get(seed).get("Items").getAsJsonArray().iterator(); it
                     .hasNext();) {
                 JsonElement el = it.next();
                 String name = el.getAsJsonObject().get("Name").toString().replace("\"", "");
@@ -241,44 +241,44 @@ public class IotaItemStateChangeListener implements StateChangeListener {
         }
     }
 
-    public HashMap<String, JsonObject> getSeedToJsonMap() {
-        return seedToJsonMap;
+    public HashMap<String, JsonObject> getJsonObjectBySeed() {
+        return jsonObjectBySeed;
     }
 
-    public HashMap<String, String> getUidToSeedMap() {
-        return uidToSeedMap;
+    public HashMap<String, String> getSeedByUID() {
+        return seedByUID;
     }
 
-    public HashMap<String, Debouncer> getSeedToDebouncerMap() {
-        return seedToDebouncerMap;
+    public HashMap<String, Debouncer> getDebouncerBySeed() {
+        return debouncerBySeed;
     }
 
-    public HashMap<String, IotaUtils> getSeedToUtilsMap() {
-        return seedToUtilsMap;
+    public HashMap<String, IotaUtils> getUtilsBySeed() {
+        return utilsBySeed;
     }
 
-    public HashMap<String, String> getSeedToPrivateKeyMap() {
-        return seedToPrivateKeyMap;
+    public HashMap<String, String> getPrivateKeyBySeed() {
+        return privateKeyBySeed;
     }
 
-    public HashMap<String, Boolean> getSeedToPaidMap() {
-        return seedToPaidMap;
+    public HashMap<String, Boolean> getPaymentReceivedBySeed() {
+        return paymentReceivedBySeed;
     }
 
-    public HashMap<String, Boolean> getSeedToHandshakeMap() {
-        return seedToHandshakeMap;
+    public HashMap<String, Boolean> getHandshakeBySeed() {
+        return handshakeBySeed;
     }
 
-    public HashMap<String, String> getWalletToSeedMap() {
-        return walletToSeedMap;
+    public HashMap<String, String> getSeedByWallet() {
+        return seedByWallet;
     }
 
-    public HashMap<String, Double> getWalletToPayment() {
-        return walletToPayment;
+    public HashMap<String, Double> getPaymentAmountByWallet() {
+        return paymentAmountByWallet;
     }
 
-    public HashMap<String, BigInteger[]> getSeedToRSAKeys() {
-        return seedToRSAKeys;
+    public HashMap<String, BigInteger[]> getRsaKeysBySeed() {
+        return rsaKeysBySeed;
     }
 
 }

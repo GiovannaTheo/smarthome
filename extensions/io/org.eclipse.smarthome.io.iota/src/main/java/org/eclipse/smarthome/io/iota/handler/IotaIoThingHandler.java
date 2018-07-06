@@ -62,7 +62,7 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
     private final Logger logger = LoggerFactory.getLogger(IotaIoThingHandler.class);
 
     private final Map<ChannelUID, ChannelConfig> channelDataByChannelUID = new HashMap<>();
-    private final Map<ChannelUID, Double> channelUIDtoBalanceMap = new HashMap<>();
+    private final Map<ChannelUID, Double> balanceByChannelUID = new HashMap<>();
     private int refresh = 0;
     private int port = 14700;
     private String protocol = "http";
@@ -182,8 +182,8 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
             }
             config.processMessage(String.valueOf(balance));
 
-            if (channelUIDtoBalanceMap.containsKey(channel.getUID())) {
-                if (channelUIDtoBalanceMap.get(channel.getUID()) != balance) {
+            if (balanceByChannelUID.containsKey(channel.getUID())) {
+                if (balanceByChannelUID.get(channel.getUID()) != balance) {
                     List<Transaction> transactions = null;
                     try {
                         transactions = bridge.findTransactionObjectsByAddresses(new String[] { config.address });
@@ -201,11 +201,11 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
 
                                 if (t.getValue() != 0) {
 
-                                    String seed = stateListener.getWalletToSeedMap().get(config.address);
+                                    String seed = stateListener.getSeedByWallet().get(config.address);
 
                                     if (Math.abs(
-                                            balance - channelUIDtoBalanceMap.get(channel.getUID())) == stateListener
-                                                    .getWalletToPayment().get(config.address)) {
+                                            balance - balanceByChannelUID.get(channel.getUID())) == stateListener
+                                                    .getPaymentAmountByWallet().get(config.address)) {
 
                                         logger.debug("Payment received. Processing MAM stream...");
 
@@ -233,12 +233,12 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
                                                 RSAUtils rsa = new RSAUtils();
                                                 logger.debug("Decrypting: {}", encryptedPassword);
                                                 String password = rsa.decrypt(encryptedPassword,
-                                                        stateListener.getSeedToRSAKeys().get(seed)[2],
-                                                        stateListener.getSeedToRSAKeys().get(seed)[3]);
+                                                        stateListener.getRsaKeysBySeed().get(seed)[2],
+                                                        stateListener.getRsaKeysBySeed().get(seed)[3]);
                                                 logger.debug("Decrpyted password is: {}", password);
                                                 // Updating password for the next push
                                                 if (password != null && !password.isEmpty()) {
-                                                    stateListener.getSeedToPrivateKeyMap().put(seed, password);
+                                                    stateListener.getPrivateKeyBySeed().put(seed, password);
                                                 }
                                             } catch (NoSuchAlgorithmException | InvalidKeyException
                                                     | NoSuchPaddingException | BadPaddingException
@@ -249,13 +249,13 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
                                             }
                                         }
 
-                                        stateListener.getSeedToPaidMap().put(seed, true);
+                                        stateListener.getPaymentReceivedBySeed().put(seed, true);
                                         /**
                                          * Releasing data
                                          */
-                                        stateListener.getSeedToUtilsMap().get(seed).publishState(
-                                                stateListener.getSeedToJsonMap().get(seed).get("Items"), "restricted",
-                                                stateListener.getSeedToPrivateKeyMap().get(seed));
+                                        stateListener.getUtilsBySeed().get(seed).publishState(
+                                                stateListener.getJsonObjectBySeed().get(seed).get("Items"), "restricted",
+                                                stateListener.getPrivateKeyBySeed().get(seed));
                                         break;
                                     }
                                 }
@@ -270,7 +270,7 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
                 }
             }
             // Updating new balance value
-            channelUIDtoBalanceMap.put(channel.getUID(), balance);
+            balanceByChannelUID.put(channel.getUID(), balance);
         }
 
     }
