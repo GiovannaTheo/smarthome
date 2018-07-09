@@ -122,13 +122,13 @@ public class IotaPaymentThingHandler extends BaseThingHandler implements Channel
                     case IotaBindingConstants.PAYMENT_CHANNEL:
                         config.value = new TextValue();
                         paymentSentByChannelUID.put(channel.getUID(), false);
-                        startAutomaticRefresh(channel.getUID());
                         break;
                     default:
                         throw new IllegalArgumentException("ThingTypeUID not recognised");
                 }
 
                 channelDataByChannelUID.put(channel.getUID(), config);
+                startAutomaticRefresh(channel.getUID());
             }
         }
         updateStatus(ThingStatus.ONLINE, ThingStatusDetail.NONE);

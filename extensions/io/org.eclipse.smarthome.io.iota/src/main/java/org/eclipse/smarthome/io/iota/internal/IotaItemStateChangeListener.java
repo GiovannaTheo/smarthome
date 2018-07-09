@@ -241,44 +241,64 @@ public class IotaItemStateChangeListener implements StateChangeListener {
         }
     }
 
-    public HashMap<String, JsonObject> getJsonObjectBySeed() {
-        return jsonObjectBySeed;
+    public JsonObject getJsonObjectBySeed(String seed) {
+        return jsonObjectBySeed.get(seed);
     }
 
-    public HashMap<String, String> getSeedByUID() {
-        return seedByUID;
+    public void addSeedByUID(String UID, String seed) {
+        seedByUID.put(UID, seed);
     }
 
-    public HashMap<String, Debouncer> getDebouncerBySeed() {
-        return debouncerBySeed;
+    public void addDebouncerBySeed(String seed, Debouncer debouncer) {
+        debouncerBySeed.put(seed, debouncer);
     }
 
-    public HashMap<String, IotaUtils> getUtilsBySeed() {
-        return utilsBySeed;
+    public void addUtilsBySeed(String seed, IotaUtils utils) {
+        utilsBySeed.put(seed, utils);
     }
 
-    public HashMap<String, String> getPrivateKeyBySeed() {
-        return privateKeyBySeed;
+    public IotaUtils getUtilsBySeed(String seed) {
+        return utilsBySeed.get(seed);
     }
 
-    public HashMap<String, Boolean> getPaymentReceivedBySeed() {
-        return paymentReceivedBySeed;
+    public String getPrivateKeyBySeed(String seed) {
+        return privateKeyBySeed.get(seed);
     }
 
-    public HashMap<String, Boolean> getHandshakeBySeed() {
-        return handshakeBySeed;
+    public void addPrivateKeyBySeed(String seed, String privateKey) {
+        privateKeyBySeed.put(seed, privateKey);
     }
 
-    public HashMap<String, String> getSeedByWallet() {
-        return seedByWallet;
+    public void addPaymentReceivedBySeed(String seed, Boolean status) {
+        paymentReceivedBySeed.put(seed, status);
     }
 
-    public HashMap<String, Double> getPaymentAmountByWallet() {
-        return paymentAmountByWallet;
+    public void addHandshakeBySeed(String seed, Boolean status) {
+        handshakeBySeed.put(seed, status);
     }
 
-    public HashMap<String, BigInteger[]> getRsaKeysBySeed() {
-        return rsaKeysBySeed;
+    public void addSeedByWallet(String wallet, String seed) {
+        seedByWallet.put(wallet, seed);
+    }
+
+    public String getSeedByWallet(String wallet) {
+        return seedByWallet.get(wallet);
+    }
+
+    public void addPaymentAmountByWallet(String wallet, double amount) {
+        paymentAmountByWallet.put(wallet, amount);
+    }
+
+    public double getPaymentAmountByWallet(String wallet) {
+        return paymentAmountByWallet.get(wallet);
+    }
+
+    public void addRsaKeysBySeed(String seed, BigInteger[] keys) {
+        rsaKeysBySeed.put(seed, keys);
+    }
+
+    public BigInteger getRsaKeysBySeed(String seed, int index) {
+        return rsaKeysBySeed.get(seed)[index];
     }
 
 }

@@ -214,9 +214,18 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
             try {
                 resp = parser.parse(utils.fetchFromTangle(refresh, root, mode, key)).getAsJsonObject();
             } catch (IllegalStateException e) {
-                logger.debug(
-                        "Exception happened: {}. The stream might not have been updated on the provider side, please wait...",
-                        e.toString());
+                /**
+                 * Sometimes the provided is slightly ahead, so we check if the next stream has already been published.
+                 */
+                try {
+                    String nextRoot = utils.getNextRoot(root);
+                    logger.debug("Trying next root....{}", nextRoot);
+                    resp = parser.parse(utils.fetchFromTangle(refresh, nextRoot, mode, key)).getAsJsonObject();
+                } catch (IllegalStateException e1) {
+                    logger.debug(
+                            "Exception happened: {}. The stream might not have been updated on the provider side, please wait...",
+                            e1.toString());
+                }
             }
             if (resp != null) {
                 if (resp.size() != 0) {

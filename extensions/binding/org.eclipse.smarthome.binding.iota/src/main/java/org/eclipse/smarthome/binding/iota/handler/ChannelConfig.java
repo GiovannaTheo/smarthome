@@ -28,7 +28,7 @@ public class ChannelConfig {
     private final Logger logger = LoggerFactory.getLogger(ChannelConfig.class);
 
     String stateTopic;
-    String transformationPattern;
+    String transformationPattern = null;
 
     String root;
     String key;

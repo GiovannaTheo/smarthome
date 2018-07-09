@@ -217,6 +217,24 @@ public class IotaUtils {
         return ans;
     }
 
+    public String getNextRoot(String root) {
+        String ans = null;
+        String[] cmd = new String[] { "/usr/local/bin/node", PATH + "getNextRoot.js",
+                bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root };
+        try {
+            logger.debug("Fetching next root...");
+            process = Runtime.getRuntime().exec(cmd);
+            String result = IOUtils.toString(process.getInputStream(), "UTF-8");
+            if (result != null && !result.isEmpty()) {
+                ans = result;
+            }
+            process.waitFor();
+        } catch (IOException | InterruptedException e) {
+            logger.debug("Exception happened: {}", e);
+        }
+        return ans;
+    }
+
     public int getStart() {
         return start;
     }

@@ -20,10 +20,10 @@
             <description>Defines the port used by IOTA API</description>
             <default>14700</default>
          </parameter>
-         <parameter name="refresh" type="integer" min="60">
+         <parameter name="refresh" type="integer" min="10">
             <label>Refresh interval</label>
             <description>Specifies the refresh interval in seconds.</description>
-            <default>60</default>
+            <default>10</default>
          </parameter>
       </config-description>
    </thing-type>
