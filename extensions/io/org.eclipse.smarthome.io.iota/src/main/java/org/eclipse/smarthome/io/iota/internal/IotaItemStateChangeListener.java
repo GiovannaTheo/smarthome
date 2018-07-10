@@ -253,6 +253,10 @@ public class IotaItemStateChangeListener implements StateChangeListener {
         debouncerBySeed.put(seed, debouncer);
     }
 
+    public Debouncer getDebouncerBySeed(String seed) {
+        return debouncerBySeed.get(seed);
+    }
+
     public void addUtilsBySeed(String seed, IotaUtils utils) {
         utilsBySeed.put(seed, utils);
     }

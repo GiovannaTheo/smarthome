@@ -249,14 +249,20 @@ public class IotaIoThingHandler extends BaseThingHandler implements ChannelState
                                         }
 
                                         stateListener.addPaymentReceivedBySeed(seed, true);
+
                                         /**
                                          * Releasing data
-                                         * TODO: Release the data through an item's state update and not directly like
-                                         * this (so it uses the debounce mechanism)
                                          */
-                                        stateListener.getUtilsBySeed(seed).publishState(
-                                                stateListener.getJsonObjectBySeed(seed).get("Items"), "restricted",
-                                                stateListener.getPrivateKeyBySeed(seed));
+
+                                        stateListener.getDebouncerBySeed(seed)
+                                                .debounce(IotaItemStateChangeListener.class, new Runnable() {
+                                                    @Override
+                                                    public void run() {
+                                                        stateListener.getUtilsBySeed(seed).publishState(
+                                                                stateListener.getJsonObjectBySeed(seed).get("Items"),
+                                                                "restricted", stateListener.getPrivateKeyBySeed(seed));
+                                                    }
+                                                }, 5000, TimeUnit.MILLISECONDS);
                                         break;
                                     }
                                 }
