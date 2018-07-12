@@ -40,7 +40,7 @@ import org.eclipse.smarthome.core.transform.TransformationService;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.core.types.State;
-import org.eclipse.smarthome.io.iota.internal.IotaUtils;
+import org.eclipse.smarthome.io.iota.utils.IotaUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

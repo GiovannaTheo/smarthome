@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.eclipse.smarthome.io.iota.internal;
+package org.eclipse.smarthome.io.iota.utils;
 
 import java.io.IOException;
 
@@ -60,7 +60,7 @@ public class IotaUtils {
      * @param item   the item for which we want to publish data
      * @param state  the item's state
      */
-    protected void publishState(JsonElement states, String mode, String key) {
+    public void publishState(JsonElement states, String mode, String key) {
 
         String payload = states.toString();
         String[] param = null;

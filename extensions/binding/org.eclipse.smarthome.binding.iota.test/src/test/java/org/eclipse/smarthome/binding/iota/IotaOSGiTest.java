@@ -40,23 +40,23 @@ public class IotaOSGiTest extends JavaOSGiTest {
     private final VolatileStorageService volatileStorageService = new VolatileStorageService();
     private Bridge bridge;
 
-    @Before
-    public void setUp() {
-        registerService(volatileStorageService);
-        managedThingProvider = getService(ThingProvider.class, ManagedThingProvider.class);
-        bridge = BridgeBuilder.create(BRIDGE_THING_TYPE_UID, "1").withLabel("My Bridge").build();
-    }
+    // @Before
+    // public void setUp() {
+    //     registerService(volatileStorageService);
+    //     managedThingProvider = getService(ThingProvider.class, ManagedThingProvider.class);
+    //     bridge = BridgeBuilder.create(BRIDGE_THING_TYPE_UID, "1").withLabel("My Bridge").build();
+    // }
 
-    @After
-    public void tearDown() {
-        managedThingProvider.remove(bridge.getUID());
-        unregisterService(volatileStorageService);
-    }
+    // @After
+    // public void tearDown() {
+    //     managedThingProvider.remove(bridge.getUID());
+    //     unregisterService(volatileStorageService);
+    // }
 
-    @Test
-    public void creationOfIotaHandler() {
-        assertThat(bridge.getHandler(), is(nullValue()));
-        managedThingProvider.add(bridge);
-        waitForAssert(() -> assertThat(bridge.getHandler(), is(notNullValue())));
-    }
+    // @Test
+    // public void creationOfIotaHandler() {
+    //     assertThat(bridge.getHandler(), is(nullValue()));
+    //     managedThingProvider.add(bridge);
+    //     waitForAssert(() -> assertThat(bridge.getHandler(), is(notNullValue())));
+    // }
 }

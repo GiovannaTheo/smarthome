@@ -21,7 +21,8 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.smarthome.core.items.Item;
 import org.eclipse.smarthome.core.items.StateChangeListener;
 import org.eclipse.smarthome.core.types.State;
-import org.eclipse.smarthome.io.iota.internal.metadata.IotaService;
+import org.eclipse.smarthome.io.iota.metadata.IotaService;
+import org.eclipse.smarthome.io.iota.utils.IotaUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

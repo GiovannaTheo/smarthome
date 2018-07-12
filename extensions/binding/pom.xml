@@ -28,6 +28,8 @@
     <module>org.eclipse.smarthome.binding.dmx.test</module>
     <module>org.eclipse.smarthome.binding.hue</module>
     <module>org.eclipse.smarthome.binding.hue.test</module>
+    <module>org.eclipse.smarthome.binding.iota</module>
+    <module>org.eclipse.smarthome.binding.iota.test</module>
     <module>org.eclipse.smarthome.binding.fsinternetradio</module>
     <module>org.eclipse.smarthome.binding.fsinternetradio.test</module>
     <module>org.eclipse.smarthome.binding.lifx</module>
@@ -44,8 +46,6 @@
     <module>org.eclipse.smarthome.binding.wemo</module>
     <module>org.eclipse.smarthome.binding.wemo.test</module>
     <module>org.eclipse.smarthome.binding.yahooweather</module>
-    <module>org.eclipse.smarthome.binding.iota</module>
-    <module>org.eclipse.smarthome.binding.iota.test</module>
   </modules>
 
 </project>

@@ -17,7 +17,7 @@ import java.util.Map;
 import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.items.ItemRegistry;
 import org.eclipse.smarthome.core.items.MetadataRegistry;
-import org.eclipse.smarthome.io.iota.internal.metadata.IotaService;
+import org.eclipse.smarthome.io.iota.metadata.IotaService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -9,6 +9,7 @@ Export-Package: org.eclipse.smarthome.binding.iota;uses:="org.eclipse.smarthome.
 Fragment-Host: org.eclipse.smarthome.binding.iota
 Import-Package: 
  org.eclipse.jdt.annotation;resolution:=optional,
+ org.eclipse.smarthome.binding.iota.handler,
  org.eclipse.smarthome.core.common.registry,
  org.eclipse.smarthome.core.events,
  org.eclipse.smarthome.core.thing,

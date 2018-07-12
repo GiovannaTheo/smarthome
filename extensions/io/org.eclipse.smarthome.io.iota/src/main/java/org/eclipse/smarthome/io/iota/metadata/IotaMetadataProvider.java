@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.eclipse.smarthome.io.iota.internal.metadata;
+package org.eclipse.smarthome.io.iota.metadata;
 
 import static java.util.stream.Collectors.toList;
 import static org.eclipse.smarthome.config.core.ConfigDescriptionParameterBuilder.create;

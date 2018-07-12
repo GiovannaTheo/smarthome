@@ -36,35 +36,35 @@ import org.mockito.Mock;
  */
 public class IotaHandlerTest {
 
-    private ThingHandler handler;
+    // private ThingHandler handler;
 
-    @Mock
-    private ThingHandlerCallback callback;
+    // @Mock
+    // private ThingHandlerCallback callback;
 
-    @Mock
-    private Thing thing;
+    // @Mock
+    // private Thing thing;
 
-    @Before
-    public void setUp() {
-        initMocks(this);
-        handler = new IotaThingHandler(thing);
-        handler.setCallback(callback);
-    }
+    // @Before
+    // public void setUp() {
+    //     initMocks(this);
+    //     handler = new IotaThingHandler(thing);
+    //     handler.setCallback(callback);
+    // }
 
-    @Test
-    public void initializeShouldCallTheCallback() {
-        // we expect the handler#initialize method to call the callback during execution and
-        // pass it the thing and a ThingStatusInfo object containing the ThingStatus of the thing.
-        handler.initialize();
+    // @Test
+    // public void initializeShouldCallTheCallback() {
+    //     // we expect the handler#initialize method to call the callback during execution and
+    //     // pass it the thing and a ThingStatusInfo object containing the ThingStatus of the thing.
+    //     handler.initialize();
 
-        // the argument captor will capture the argument of type ThingStatusInfo given to the
-        // callback#statusUpdated method.
-        ArgumentCaptor<ThingStatusInfo> statusInfoCaptor = ArgumentCaptor.forClass(ThingStatusInfo.class);
+    //     // the argument captor will capture the argument of type ThingStatusInfo given to the
+    //     // callback#statusUpdated method.
+    //     ArgumentCaptor<ThingStatusInfo> statusInfoCaptor = ArgumentCaptor.forClass(ThingStatusInfo.class);
 
-        // verify the interaction with the callback and capture the ThingStatusInfo argument:
-        verify(callback).statusUpdated(eq(thing), statusInfoCaptor.capture());
-        // assert that the ThingStatusInfo given to the callback was build with the ONLINE status:
-        ThingStatusInfo thingStatusInfo = statusInfoCaptor.getValue();
-        assertThat(thingStatusInfo.getStatus(), is(equalTo(ThingStatus.ONLINE)));
-    }
+    //     // verify the interaction with the callback and capture the ThingStatusInfo argument:
+    //     verify(callback).statusUpdated(eq(thing), statusInfoCaptor.capture());
+    //     // assert that the ThingStatusInfo given to the callback was build with the ONLINE status:
+    //     ThingStatusInfo thingStatusInfo = statusInfoCaptor.getValue();
+    //     assertThat(thingStatusInfo.getStatus(), is(equalTo(ThingStatus.ONLINE)));
+    // }
 }

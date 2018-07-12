@@ -1,5 +1,3 @@
-package org.eclipse.smarthome.binding.iota;
-
 /**
  * Copyright (c) 2014,2018 Contributors to the Eclipse Foundation
  *
@@ -12,6 +10,7 @@ package org.eclipse.smarthome.binding.iota;
  *
  * SPDX-License-Identifier: EPL-2.0
  */
+package org.eclipse.smarthome.binding.iota;
 
 import java.util.Arrays;
 import java.util.Collections;
