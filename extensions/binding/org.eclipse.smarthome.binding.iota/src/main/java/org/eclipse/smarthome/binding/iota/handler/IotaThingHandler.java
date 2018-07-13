@@ -15,11 +15,20 @@ package org.eclipse.smarthome.binding.iota.handler;
 import static org.eclipse.smarthome.binding.iota.handler.IotaConfiguration.*;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.smarthome.binding.iota.IotaBindingConstants;
@@ -32,15 +41,18 @@ import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
+import org.eclipse.smarthome.core.thing.ThingRegistry;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
+import org.eclipse.smarthome.core.thing.binding.builder.ThingBuilder;
 import org.eclipse.smarthome.core.transform.TransformationException;
 import org.eclipse.smarthome.core.transform.TransformationService;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
 import org.eclipse.smarthome.core.types.State;
-import org.eclipse.smarthome.io.iota.internal.IotaUtils;
+import org.eclipse.smarthome.io.iota.security.RSAUtils;
+import org.eclipse.smarthome.io.iota.utils.IotaUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +60,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
+import jota.IotaAPI;
+import jota.dto.response.SendTransferResponse;
+import jota.model.Transfer;
+import jota.utils.TrytesConverter;
 
 /**
  * The {@link IotaThingHandler} is responsible for handling commands, which are
@@ -63,17 +80,25 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
     private final Logger logger = LoggerFactory.getLogger(IotaThingHandler.class);
     private TransformationServiceProvider transformationServiceProvider;
     private final Map<ChannelUID, ChannelConfig> channelDataByChannelUID = new HashMap<>();
+    private final Map<ChannelUID, String> walletByChannelUID = new HashMap<>();
+    private final Map<ChannelUID, Boolean> paymentSentByChannelUID = new HashMap<>();
     private String root;
     private JsonArray data = new JsonArray();
+    private JsonObject dataPayment = new JsonObject();
     private int refresh = 0;
     private String mode;
+    private String nextroot;
     private String key = null;
     private IotaUtils utils;
     ScheduledFuture<?> refreshJob;
+    ScheduledFuture<?> refreshJobPayment;
+    private ThingRegistry thingRegistry;
 
-    public IotaThingHandler(Thing thing, TransformationServiceProvider transformationServiceProvider) {
+    public IotaThingHandler(Thing thing, TransformationServiceProvider transformationServiceProvider,
+            ThingRegistry thingRegistry) {
         super(thing);
         this.transformationServiceProvider = transformationServiceProvider;
+        this.thingRegistry = thingRegistry;
     }
 
     public IotaThingHandler(Thing thing) {
@@ -83,20 +108,21 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
 
-        ChannelConfig data = channelDataByChannelUID.get(channelUID);
+        if (!channelUID.getId().equals(IotaBindingConstants.PAYMENT_CHANNEL)) {
+            ChannelConfig data = channelDataByChannelUID.get(channelUID);
 
-        if (data == null) {
-            logger.warn("Channel {} not supported", channelUID.getId());
-            return;
-        }
-
-        if (command instanceof RefreshType) {
-            if (data.value.getValue() != null) {
-                updateState(channelUID.getId(), data.value.getValue());
+            if (data == null) {
+                logger.warn("Channel {} not supported", channelUID.getId());
                 return;
             }
-        }
 
+            if (command instanceof RefreshType) {
+                if (data.value.getValue() != null) {
+                    updateState(channelUID.getId(), data.value.getValue());
+                    return;
+                }
+            }
+        }
     }
 
     @Override
@@ -125,6 +151,8 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
             logger.debug("Could not initialize Iota Utils for thing {}", this.getThing().getUID());
         }
 
+        updateStatus(ThingStatus.ONLINE, ThingStatusDetail.NONE);
+
         for (Channel channel : thing.getChannels()) {
             if (!channelDataByChannelUID.containsKey(channel.getUID())) {
                 ChannelConfig config = channel.getConfiguration().as(ChannelConfig.class);
@@ -147,15 +175,24 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
                 switch (channel.getChannelTypeUID().getId()) {
                     case IotaBindingConstants.TEXT_CHANNEL:
                         config.value = new TextValue();
+                        startAutomaticRefresh();
                         break;
                     case IotaBindingConstants.NUMBER_CHANNEL:
                         config.value = new NumberValue(config.isFloat, config.step);
+                        startAutomaticRefresh();
                         break;
                     case IotaBindingConstants.PERCENTAGE_CHANNEL:
                         config.value = new PercentValue(config.isFloat, config.min, config.max, config.step);
+                        startAutomaticRefresh();
                         break;
                     case IotaBindingConstants.ONOFF_CHANNEL:
                         config.value = new OnOffValue(config.on, config.off, config.inverse);
+                        startAutomaticRefresh();
+                        break;
+                    case IotaBindingConstants.PAYMENT_CHANNEL:
+                        config.value = new TextValue();
+                        paymentSentByChannelUID.put(channel.getUID(), false);
+                        startAutomaticRefreshPayment(channel.getUID());
                         break;
                     default:
                         throw new IllegalArgumentException("ThingTypeUID not recognised");
@@ -164,11 +201,6 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
                 channelDataByChannelUID.put(channel.getUID(), config);
             }
         }
-
-        updateStatus(ThingStatus.ONLINE, ThingStatusDetail.NONE);
-        if (this.getThing().getChannels().size() != 0) {
-            startAutomaticRefresh();
-        }
     }
 
     @Override
@@ -176,10 +208,37 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
         if (refreshJob != null) {
             refreshJob.cancel(true);
         }
+        if (refreshJobPayment != null) {
+            refreshJobPayment.cancel(true);
+        }
         for (ChannelConfig channelConfig : channelDataByChannelUID.values()) {
             channelConfig.dispose();
         }
         channelDataByChannelUID.clear();
+    }
+
+    private synchronized void startAutomaticRefreshPayment(ChannelUID channelUID) {
+        logger.debug("Payment info will refresh every {} seconds", refresh);
+        refreshJobPayment = scheduler.scheduleWithFixedDelay(() -> {
+            try {
+                if (channelDataByChannelUID.containsKey(channelUID)) {
+                    if (!paymentSentByChannelUID.get(channelUID)) {
+                        boolean success = sendPaymentToWallet(channelUID);
+                        if (success) {
+                            /**
+                             * Payment successfully sent
+                             */
+                            paymentSentByChannelUID.put(channelUID, true);
+                        }
+                    }
+
+                    checkPaymentStatus(channelUID);
+                }
+            } catch (Exception e) {
+                logger.debug("Exception occurred during execution: {}", e.getMessage(), e);
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, e.getMessage());
+            }
+        }, 0, refresh, TimeUnit.SECONDS);
     }
 
     /**
@@ -310,6 +369,167 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
                 }
             }
 
+        }
+    }
+
+    /**
+     *
+     * @return success if any data is found in the MAM transaction
+     */
+    private synchronized boolean sendPaymentToWallet(ChannelUID channelUID) {
+        boolean success = false;
+        ChannelConfig config = channelDataByChannelUID.get(channelUID);
+        if (config.root != null && !config.root.isEmpty()) {
+            JsonParser parser = new JsonParser();
+            if (this.utils != null) {
+                /**
+                 * FOR TESTING ONLY WITH TESTNET
+                 */
+                IotaUtils mamUtils = new IotaUtils("https", "nodes.testnet.iota.org", 443);
+                /**
+                 * TODO: REMOVE and use the bridge
+                 */
+                JsonObject resp = null;
+                try {
+                    resp = parser.parse(mamUtils.fetchFromTangle(refresh, config.root, "restricted", config.key))
+                            .getAsJsonObject();
+                } catch (IllegalStateException e) {
+                    logger.debug("Exception happened: {}", e.toString());
+                }
+
+                if (resp != null) {
+
+                    nextroot = resp.get("NEXTROOT").getAsString();
+                    dataPayment = resp.entrySet().iterator().next().getValue().getAsJsonObject();
+
+                    if (data != null) {
+                        double price = dataPayment.get("PRICE").getAsDouble();
+                        if (price <= config.threshold) {
+
+                            /**
+                             * Price is smaller than threshold. Authorization granted for processing the payment
+                             */
+
+                            String wallet = dataPayment.get("WALLET").getAsString();
+                            String encryptedPassword = "";
+
+                            if (config.ownkey != null && !config.ownkey.isEmpty()) {
+                                JsonObject rsaJson = dataPayment.get("RSA").getAsJsonObject();
+                                try {
+                                    RSAUtils rsa = new RSAUtils();
+                                    encryptedPassword = rsa.encrypt(config.ownkey,
+                                            new BigInteger(rsaJson.get("MODULUS").getAsString()),
+                                            new BigInteger(rsaJson.get("EXPONENT").getAsString()));
+                                } catch (NoSuchAlgorithmException | InvalidKeyException | BadPaddingException
+                                        | IllegalBlockSizeException | NoSuchPaddingException e) {
+                                    logger.debug("Exception happened: {}", e.toString());
+                                }
+                            }
+
+                            if (walletByChannelUID.containsKey(channelUID)) {
+
+                                /**
+                                 * Payment has already been sent once
+                                 */
+
+                                success = false;
+                            } else {
+
+                                /**
+                                 * Processing payment on the Tangle
+                                 */
+
+                                logger.debug("Payment on wallet: {}", wallet);
+                                logger.debug("Encrypted password: {}", encryptedPassword);
+                                logger.debug("Trytes encrypted password: {}",
+                                        jota.utils.TrytesConverter.toTrytes(encryptedPassword));
+
+                                /**
+                                 * price needs to be indicated in iota, not Miota
+                                 */
+
+                                List<Transfer> transfers = new ArrayList<>();
+                                Transfer t = new Transfer(wallet, (int) (price * 1000000),
+                                        TrytesConverter.toTrytes(encryptedPassword), "999999999999999999999999999");
+                                transfers.add(t);
+                                IotaBridgeHandler handler = null;
+                                Bridge bridge = this.getBridge();
+                                if (bridge != null) {
+                                    handler = (IotaBridgeHandler) bridge.getHandler();
+                                }
+                                SendTransferResponse transfer = null;
+                                try {
+                                    /**
+                                     * TODO: remove this and use the bridge
+                                     */
+                                    IotaAPI api = new IotaAPI.Builder().protocol("http").host("localhost").port("14700")
+                                            .build();
+                                    if (handler != null) {
+                                        transfer = api.sendTransfer(handler.getSeed(), 2, 9, 9, transfers, null, null,
+                                                true, true);
+                                        logger.debug("IOTA transfer was successfull: {}", transfer);
+                                        walletByChannelUID.put(channelUID, wallet);
+                                        success = true;
+                                    }
+                                } catch (Exception e) {
+                                    logger.debug("Exception happened: {}", e.toString());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, "Could not fetch data");
+        }
+        return success;
+    }
+
+    /**
+     * Updates the payment status
+     *
+     */
+    private synchronized void updatePaymentStatus(ChannelUID channelUID, String status) {
+        ChannelConfig config = channelDataByChannelUID.get(channelUID);
+        config.processMessage(status);
+    }
+
+    /**
+     * Checks the payment status for a wallet address on the Tangle
+     *
+     * @param channelUID
+     */
+    private synchronized void checkPaymentStatus(ChannelUID channelUID) {
+
+        String wallet = walletByChannelUID.get(channelUID);
+        boolean status = utils.checkTransactionStatus(wallet);
+
+        if (status) {
+
+            updatePaymentStatus(channelUID, "success");
+
+            ChannelConfig config = channelDataByChannelUID.get(channelUID);
+
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("root", nextroot);
+            properties.put("refresh", 60);
+            properties.put("mode", mode);
+            properties.put("key", config.ownkey);
+            Configuration configuration = new Configuration(properties);
+
+            /**
+             * Payment is successfull, updating thing
+             */
+
+            ThingBuilder thingBuilder = editThing();
+
+            thingBuilder = thingBuilder.withConfiguration(configuration);
+            updateThing(thingBuilder.build());
+
+            refreshJobPayment.cancel(true); // stoping the refresh process
+
+        } else {
+            updatePaymentStatus(channelUID, "processing...");
         }
     }
 

@@ -10,7 +10,7 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.eclipse.smarthome.io.iota.internal;
+package org.eclipse.smarthome.io.iota.utils;
 
 import java.io.IOException;
 
@@ -196,10 +196,14 @@ public class IotaUtils {
 
     public boolean checkTransactionStatus(String walletAddress) {
         boolean ans = false;
-        if (bridge != null) {
+        /**
+         * TODO: remove and use bridge
+         */
+        IotaAPI api = new IotaAPI.Builder().protocol("http").host("localhost").port("14700").build();
+        if (api != null) {
             try {
-                FindTransactionResponse response = bridge.findTransactionsByAddresses(new String[] { walletAddress });
-                boolean[] status = bridge.getLatestInclusion(response.getHashes()).getStates();
+                FindTransactionResponse response = api.findTransactionsByAddresses(new String[] { walletAddress });
+                boolean[] status = api.getLatestInclusion(response.getHashes()).getStates();
                 /**
                  * Search for any true value in the states array. If one is found, transaction is approved.
                  */

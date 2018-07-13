@@ -12,20 +12,7 @@
  */
 package org.eclipse.smarthome.binding.iota;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-
-import org.eclipse.smarthome.core.thing.Bridge;
-import org.eclipse.smarthome.core.thing.ManagedThingProvider;
-import org.eclipse.smarthome.core.thing.ThingProvider;
-import org.eclipse.smarthome.core.thing.ThingTypeUID;
-import org.eclipse.smarthome.core.thing.binding.builder.BridgeBuilder;
 import org.eclipse.smarthome.test.java.JavaOSGiTest;
-import org.eclipse.smarthome.test.storage.VolatileStorageService;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 /**
  * Test cases for {@link IotaHandler}.
@@ -34,29 +21,29 @@ import org.junit.Test;
  */
 public class IotaOSGiTest extends JavaOSGiTest {
 
-    private static final ThingTypeUID BRIDGE_THING_TYPE_UID = new ThingTypeUID("iota", "bridge");
-
-    private ManagedThingProvider managedThingProvider;
-    private final VolatileStorageService volatileStorageService = new VolatileStorageService();
-    private Bridge bridge;
-
-    @Before
-    public void setUp() {
-        registerService(volatileStorageService);
-        managedThingProvider = getService(ThingProvider.class, ManagedThingProvider.class);
-        bridge = BridgeBuilder.create(BRIDGE_THING_TYPE_UID, "1").withLabel("My Bridge").build();
-    }
-
-    @After
-    public void tearDown() {
-        managedThingProvider.remove(bridge.getUID());
-        unregisterService(volatileStorageService);
-    }
-
-    @Test
-    public void creationOfIotaHandler() {
-        assertThat(bridge.getHandler(), is(nullValue()));
-        managedThingProvider.add(bridge);
-        waitForAssert(() -> assertThat(bridge.getHandler(), is(notNullValue())));
-    }
+//    private static final ThingTypeUID BRIDGE_THING_TYPE_UID = new ThingTypeUID("iota", "bridge");
+//
+//    private ManagedThingProvider managedThingProvider;
+//    private final VolatileStorageService volatileStorageService = new VolatileStorageService();
+//    private Bridge bridge;
+//
+//    @Before
+//    public void setUp() {
+//        registerService(volatileStorageService);
+//        managedThingProvider = getService(ThingProvider.class, ManagedThingProvider.class);
+//        bridge = BridgeBuilder.create(BRIDGE_THING_TYPE_UID, "1").withLabel("My Bridge").build();
+//    }
+//
+//    @After
+//    public void tearDown() {
+//        managedThingProvider.remove(bridge.getUID());
+//        unregisterService(volatileStorageService);
+//    }
+//
+//    @Test
+//    public void creationOfIotaHandler() {
+//        assertThat(bridge.getHandler(), is(nullValue()));
+//        managedThingProvider.add(bridge);
+//        waitForAssert(() -> assertThat(bridge.getHandler(), is(notNullValue())));
+//    }
 }

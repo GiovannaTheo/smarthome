@@ -18,7 +18,6 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.binding.iota.IotaBindingConstants;
 import org.eclipse.smarthome.binding.iota.handler.IotaBridgeHandler;
-import org.eclipse.smarthome.binding.iota.handler.IotaPaymentThingHandler;
 import org.eclipse.smarthome.binding.iota.handler.IotaThingHandler;
 import org.eclipse.smarthome.binding.iota.handler.TransformationServiceProvider;
 import org.eclipse.smarthome.core.thing.Bridge;
@@ -46,9 +45,8 @@ public class IotaHandlerFactory extends BaseThingHandlerFactory implements Trans
 
     private ThingRegistry thingRegistry;
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Sets.newHashSet(
-            IotaBindingConstants.THING_TYPE_BRIDGE, IotaBindingConstants.THING_TYPE_IOTA,
-            IotaBindingConstants.THING_TYPE_IOTA_PAYMENT);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Sets
+            .newHashSet(IotaBindingConstants.THING_TYPE_BRIDGE, IotaBindingConstants.THING_TYPE_IOTA);
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -60,11 +58,7 @@ public class IotaHandlerFactory extends BaseThingHandlerFactory implements Trans
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
         if (IotaBindingConstants.THING_TYPE_IOTA.equals(thingTypeUID)) {
-            return new IotaThingHandler(thing, this);
-        }
-
-        if (IotaBindingConstants.THING_TYPE_IOTA_PAYMENT.equals(thingTypeUID)) {
-            return new IotaPaymentThingHandler(thing, this.thingRegistry);
+            return new IotaThingHandler(thing, this, this.thingRegistry);
         }
 
         if (IotaBindingConstants.THING_TYPE_BRIDGE.equals(thingTypeUID)) {
@@ -85,4 +79,7 @@ public class IotaHandlerFactory extends BaseThingHandlerFactory implements Trans
         this.thingRegistry = thingRegistry;
     }
 
+    protected void unsetThingRegistry(ThingRegistry thingRegistry) {
+        this.thingRegistry = null;
+    }
 }

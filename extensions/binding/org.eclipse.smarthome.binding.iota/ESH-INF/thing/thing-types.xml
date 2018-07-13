@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <thing:thing-descriptions xmlns:thing="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" bindingId="iota" xsi:schemaLocation="http://eclipse.org/smarthome/schemas/thing-description/v1.0.0 http://eclipse.org/smarthome/schemas/thing-description-1.0.0.xsd">
    <!-- IOTA Binding -->
-   <thing-type id="topic" extensible="text,number,percentage,onoff">
+   <thing-type id="topic" extensible="text,number,percentage,onoff,textPayment">
       <supported-bridge-type-refs>
           <bridge-type-ref id="bridge"/>
       </supported-bridge-type-refs>
       <label>Topic</label>
       <description>This thing represents a topic</description>
       <config-description>
-         <parameter name="root" type="text" required="true">
+         <parameter name="root" type="text">
             <label>Root Address</label>
             <description>The root address from which item states should be retrieved from</description>
          </parameter>
@@ -16,7 +16,7 @@
             <label>Refresh interval</label>
             <description>Specifies the refresh interval in seconds.</description>
          </parameter>
-         <parameter name="mode" type="text" required="true">
+         <parameter name="mode" type="text">
             <options>
                 <option value="public">Public</option>
                 <option value="private">Private</option>
@@ -25,26 +25,10 @@
             <label>MAM Mode</label>
             <description>The mode of the channel on which to fetch data</description>
         </parameter>
-        <parameter name="key" type="text" required="false">
+        <parameter name="key" type="text">
             <label>Private Key</label>
             <description>Leave blank for non-restricted mode, otherwise enter the private key you want to use</description>
          </parameter>
-      </config-description>
-   </thing-type>
-   
-   <thing-type id="automaticPayment" extensible="textPayment">
-      <supported-bridge-type-refs>
-          <bridge-type-ref id="bridge"/>
-      </supported-bridge-type-refs>
-      <label>Automatic Payment</label>
-      <description>This thing allows automatic compensation for the data providers that share a restricted and charged MAM stream. Once the fees paid, a Topic thing will be automatically created with the fetched data.</description>
-      <config-description>
-         
-         <parameter name="refresh" type="integer" min="60">
-            <label>Refresh interval</label>
-            <description>Specifies the refresh interval in seconds.</description>
-         </parameter>
-        
       </config-description>
    </thing-type>
    
