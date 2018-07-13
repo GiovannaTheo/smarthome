@@ -95,14 +95,14 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                          * instance of IOTA Utils for publishing.
                                          */
 
-                                        if (stateListener.getSeedToUtilsMap().containsKey(seed)) {
-                                            stateListener.getUidToSeedMap().put(item.getUID(), seed);
+                                        if (stateListener.getUtilsBySeed(seed) != null) {
+                                            stateListener.addSeedByUID(item.getUID(), seed);
                                         } else {
                                             updateMaps(item, seed);
                                             // -1 indicates the JS script to recompute itself the depth
                                             // of the merkle root tree by fetching all the data from the
                                             // initial root
-                                            stateListener.getSeedToUtilsMap().get(seed).setStart(-1);
+                                            stateListener.getUtilsBySeed(seed).setStart(-1);
                                         }
 
                                     } else {
@@ -123,12 +123,12 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                         logger.debug("An existing key will be used for item {}", item.getUID());
                                         String inputKey = element.getConfiguration().get("key").toString();
                                         if (inputKey != null && !inputKey.isEmpty()) {
-                                            stateListener.getSeedToPrivateKeyMap().put(seed, inputKey);
+                                            stateListener.addPrivateKeyBySeed(seed, inputKey);
                                         }
                                     } else {
                                         logger.debug("Invalid key for item {}. Generating a new one", item.getUID());
                                         String key = seedGenerator.getNewPrivateKey();
-                                        stateListener.getSeedToPrivateKeyMap().put(seed, key);
+                                        stateListener.addPrivateKeyBySeed(seed, key);
                                         element.getConfiguration().put("key", key);
                                         metadataRegistry.update(element);
                                     }
@@ -176,9 +176,9 @@ public class IotaService implements RegistryChangeListener<Metadata> {
      * @param seed
      */
     public void updateMaps(Item item, String seed) {
-        stateListener.getUidToSeedMap().put(item.getUID(), seed);
-        stateListener.getSeedToDebouncerMap().put(seed, new Debouncer());
-        stateListener.getSeedToUtilsMap().put(seed,
+        stateListener.addSeedByUID(item.getUID(), seed);
+        stateListener.addDebouncerBySeed(seed, new Debouncer());
+        stateListener.addUtilsBySeed(seed,
                 new IotaUtils(bridge.getProtocol(), bridge.getHost(), Integer.parseInt(bridge.getPort()), seed, 0));
     }
 

@@ -45,35 +45,35 @@ public class IotaItemStateChangeListener implements StateChangeListener {
 
     private final Logger logger = LoggerFactory.getLogger(IotaItemStateChangeListener.class);
     private IotaAPI bridge;
-    private final HashMap<String, JsonObject> seedToJsonMap = new HashMap<>();
-    private final HashMap<String, String> uidToSeedMap = new HashMap<>();
-    private final HashMap<String, Debouncer> seedToDebouncerMap = new HashMap<>();
-    private final HashMap<String, IotaUtils> seedToUtilsMap = new HashMap<>();
-    private final HashMap<String, String> seedToPrivateKeyMap = new HashMap<>();
+    private final HashMap<String, JsonObject> jsonObjectBySeed = new HashMap<>();
+    private final HashMap<String, String> seedByUID = new HashMap<>();
+    private final HashMap<String, Debouncer> debouncerBySeed = new HashMap<>();
+    private final HashMap<String, IotaUtils> utilsBySeed = new HashMap<>();
+    private final HashMap<String, String> privateKeyBySeed = new HashMap<>();
     private IotaService service;
 
     @Override
     public void stateChanged(@NonNull Item item, @NonNull State oldState, @NonNull State newState) {
         service.getMetadataRegistry().getAll().forEach(metadata -> {
             if (metadata.getUID().getItemName().equals(item.getName())) {
-                String seed = uidToSeedMap.get(item.getUID());
+                String seed = seedByUID.get(item.getUID());
 
-                if (seedToJsonMap.containsKey(seed)) {
+                if (jsonObjectBySeed.containsKey(seed)) {
                     /**
                      * Entries already exists. Updating the value in the json array
                      */
-                    JsonObject oldEntries = seedToJsonMap.get(seed);
+                    JsonObject oldEntries = jsonObjectBySeed.get(seed);
                     JsonObject newEntries = addToStates(item, newState, oldEntries);
-                    seedToJsonMap.put(seed, newEntries);
+                    jsonObjectBySeed.put(seed, newEntries);
                 } else {
                     /**
                      * New entry, creating a new json object
                      */
-                    seedToJsonMap.put(seed,
+                    jsonObjectBySeed.put(seed,
                             addToStates(item, newState, new Gson().fromJson("{\"Items\":[]}", JsonObject.class)));
                 }
                 String mode = metadata.getConfiguration().get("mode").toString();
-                Debouncer debouncer = seedToDebouncerMap.get(seed);
+                Debouncer debouncer = debouncerBySeed.get(seed);
                 if (debouncer != null) {
                     /**
                      * If several items publish on the same channel, the debounce mechanism bellow
@@ -83,8 +83,8 @@ public class IotaItemStateChangeListener implements StateChangeListener {
                     debouncer.debounce(IotaItemStateChangeListener.class, new Runnable() {
                         @Override
                         public void run() {
-                            String key = mode.equals("restricted") ? seedToPrivateKeyMap.get(seed) : null;
-                            seedToUtilsMap.get(seed).publishState(seedToJsonMap.get(seed).get("Items"), mode, key);
+                            String key = mode.equals("restricted") ? privateKeyBySeed.get(seed) : null;
+                            utilsBySeed.get(seed).publishState(jsonObjectBySeed.get(seed).get("Items"), mode, key);
                         }
                     }, 1000, TimeUnit.MILLISECONDS);
                 }
@@ -170,9 +170,9 @@ public class IotaItemStateChangeListener implements StateChangeListener {
      */
     public void removeItemFromJson(@NonNull Item item) {
 
-        String seed = uidToSeedMap.get(item.getUID());
+        String seed = seedByUID.get(item.getUID());
         if (seed != null && !seed.isEmpty()) {
-            for (Iterator<JsonElement> it = seedToJsonMap.get(seed).get("Items").getAsJsonArray().iterator(); it
+            for (Iterator<JsonElement> it = jsonObjectBySeed.get(seed).get("Items").getAsJsonArray().iterator(); it
                     .hasNext();) {
                 JsonElement el = it.next();
                 String name = el.getAsJsonObject().get("Name").toString().replace("\"", "");
@@ -183,24 +183,32 @@ public class IotaItemStateChangeListener implements StateChangeListener {
         }
     }
 
-    public HashMap<String, JsonObject> getSeedToJsonMap() {
-        return seedToJsonMap;
+    public JsonObject getJsonObjectBySeed(String seed) {
+        return jsonObjectBySeed.get(seed);
     }
 
-    public HashMap<String, String> getUidToSeedMap() {
-        return uidToSeedMap;
+    public void addSeedByUID(String UID, String seed) {
+        seedByUID.put(UID, seed);
     }
 
-    public HashMap<String, Debouncer> getSeedToDebouncerMap() {
-        return seedToDebouncerMap;
+    public void addDebouncerBySeed(String seed, Debouncer debouncer) {
+        debouncerBySeed.put(seed, debouncer);
     }
 
-    public HashMap<String, IotaUtils> getSeedToUtilsMap() {
-        return seedToUtilsMap;
+    public void addUtilsBySeed(String seed, IotaUtils utils) {
+        utilsBySeed.put(seed, utils);
     }
 
-    public HashMap<String, String> getSeedToPrivateKeyMap() {
-        return seedToPrivateKeyMap;
+    public IotaUtils getUtilsBySeed(String seed) {
+        return utilsBySeed.get(seed);
+    }
+
+    public String getPrivateKeyBySeed(String seed) {
+        return privateKeyBySeed.get(seed);
+    }
+
+    public void addPrivateKeyBySeed(String seed, String privateKey) {
+        privateKeyBySeed.put(seed, privateKey);
     }
 
 }
