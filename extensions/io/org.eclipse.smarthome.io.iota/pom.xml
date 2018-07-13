@@ -12,6 +12,6 @@
   <artifactId>org.eclipse.smarthome.io.iota</artifactId>
   <packaging>eclipse-plugin</packaging>
 
-  <name>iota Binding</name>
+  <name>Eclipse SmartHome Iota IO</name>
 
 </project>

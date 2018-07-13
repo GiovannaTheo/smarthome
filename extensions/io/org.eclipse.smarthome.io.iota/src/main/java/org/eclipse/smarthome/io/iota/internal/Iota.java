@@ -18,6 +18,10 @@ import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.items.ItemRegistry;
 import org.eclipse.smarthome.core.items.MetadataRegistry;
 import org.eclipse.smarthome.io.iota.metadata.IotaService;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +32,7 @@ import jota.IotaAPI;
  *
  * @author Theo Giovanna - Initial Contribution
  */
+@Component(service = Iota.class, configurationPid = "org.eclipse.smarthome.iota", immediate = true)
 public class Iota {
 
     private final Logger logger = LoggerFactory.getLogger(Iota.class);
@@ -35,6 +40,7 @@ public class Iota {
     private final IotaSettings settings = new IotaSettings();
     private final IotaItemRegistryListener itemListener = new IotaItemRegistryListener();
 
+    @Reference
     public void setItemRegistry(ItemRegistry itemRegistry) {
         itemListener.setItemRegistry(itemRegistry);
         itemListener.setService(service);
@@ -42,14 +48,24 @@ public class Iota {
         service.setSettings(settings);
     }
 
+    public void unsetItemRegistry(ItemRegistry itemRegistry) {
+        itemListener.setItemRegistry(null);
+    }
+
+    @Reference
     protected void setMetadataRegistry(MetadataRegistry metadataRegistry) {
         service.setMetadataRegistry(metadataRegistry);
+    }
+
+    protected void unsetMetadataRegistry(MetadataRegistry metadataRegistry) {
+        service.setMetadataRegistry(null);
     }
 
     /*
      * This function is called every time that the user updates the API parameters in Paper UI.
      * The Iota API instance is then updated accordingly
      */
+    @Activate
     protected synchronized void activate(Map<String, Object> data) {
         modified(new Configuration(data).as(IotaApiConfiguration.class));
     }
@@ -67,6 +83,7 @@ public class Iota {
         }
     }
 
+    @Deactivate
     protected void deactivate() {
         service.setBridge(null);
         service.stop();
