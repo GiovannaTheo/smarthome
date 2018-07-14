@@ -202,10 +202,12 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
     }
 
     /**
+     * We make this method public to use it explicitely in tests
      *
      * @return success if any data is found in the MAM transaction
+     *
      */
-    private synchronized boolean fetchItemState() {
+    public synchronized boolean fetchItemState() {
         boolean success = false;
         if (!root.isEmpty()) {
             JsonParser parser = new JsonParser();
@@ -334,6 +336,14 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public IotaUtils getUtils() {
+        return this.utils;
+    }
+
+    public void setUtils(IotaUtils utils) {
+        this.utils = utils;
     }
 
     @Override
