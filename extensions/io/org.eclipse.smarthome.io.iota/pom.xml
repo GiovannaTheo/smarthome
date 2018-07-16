@@ -14,4 +14,45 @@
 
   <name>Eclipse SmartHome Iota IO</name>
 
+  <!-- <build>
+    <plugins>
+      <plugin>
+        <groupId>com.github.eirslett</groupId>
+        <artifactId>frontend-maven-plugin</artifactId>
+        <version>1.0</version>
+
+        <configuration>
+          <nodeVersion>v8.1.2</nodeVersion>
+          <npmVersion>5.8.0</npmVersion>
+          <nodeDownloadRoot>http://nodejs.org/dist/</nodeDownloadRoot>
+          <npmDownloadRoot>http://registry.npmjs.org/npm/-/</npmDownloadRoot>
+        </configuration>
+
+        <executions>
+          <execution>
+            <id>Install node and npm</id>
+            <goals>
+              <goal>install-node-and-npm</goal>
+            </goals>
+            <phase>generate-resources</phase>
+          </execution>
+
+          <execution>
+            <id>npm install</id>
+            <goals>
+                <goal>npm</goal>
+            </goals>
+            <phase>generate-sources</phase>
+            <configuration>                         
+                <executable>npm</executable>
+                <workingDirectory>${project.basedir}/lib/mam</workingDirectory>
+                <arguments>install</arguments>
+            </configuration>
+	       </execution>
+
+        </executions>
+      </plugin>
+    </plugins>
+  </build> -->
+
 </project>

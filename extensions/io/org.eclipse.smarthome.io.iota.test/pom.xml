@@ -9,16 +9,16 @@
     <version>0.10.0-SNAPSHOT</version>
   </parent>
 
+  <groupId>org.eclipse.smarthome.io</groupId>
   <artifactId>org.eclipse.smarthome.io.iota.test</artifactId>
-  <version>0.10.0-SNAPSHOT</version>
   <packaging>eclipse-test-plugin</packaging>
 
   <name>Eclipse SmartHome Iota IO Bundle Tests</name>
 
-  <build>
+    <build>
     <plugins>
       <plugin>
-        <groupId>${tycho-groupid}</groupId>
+        <groupId>org.eclipse.tycho</groupId>
         <artifactId>target-platform-configuration</artifactId>
         <configuration>
           <environments combine.self="override"></environments>
@@ -54,10 +54,15 @@
         </configuration>
       </plugin>
       <plugin>
-        <groupId>${tycho-groupid}</groupId>
+        <groupId>org.eclipse.tycho</groupId>
         <artifactId>tycho-surefire-plugin</artifactId>
         <configuration>
           <dependencies>
+            <dependency>
+              <type>eclipse-plugin</type>
+              <artifactId>org.eclipse.equinox.ds</artifactId>
+              <version>0.0.0</version>
+            </dependency>
             <dependency>
               <type>eclipse-plugin</type>
               <artifactId>ch.qos.logback.classic</artifactId>

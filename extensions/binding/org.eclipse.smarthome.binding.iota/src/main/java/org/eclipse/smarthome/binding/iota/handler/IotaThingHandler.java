@@ -230,7 +230,7 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
      *
      * @param data
      */
-    private synchronized void updateAllStates(JsonArray data) {
+    public synchronized void updateAllStates(JsonArray data) {
         String str = null;
         if (data.size() != 0) {
             for (Channel channel : thing.getChannels()) {

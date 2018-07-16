@@ -50,7 +50,7 @@ public class IotaHandlerFactory extends BaseThingHandlerFactory implements Trans
     }
 
     @Override
-    protected @Nullable ThingHandler createHandler(Thing thing) {
+    public @Nullable ThingHandler createHandler(Thing thing) {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
         if (IotaBindingConstants.THING_TYPE_IOTA.equals(thingTypeUID)) {

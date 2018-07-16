@@ -23,6 +23,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import jota.IotaAPI;
+import jota.utils.InputValidator;
 
 /**
  * Provides utils methods to work with IOTA transactions
@@ -105,12 +106,14 @@ public class IotaUtils {
                     start = json.getAsJsonPrimitive("START").getAsInt();
                     seed = json.getAsJsonPrimitive("SEED").getAsString();
                     logger.debug("Sent: {}", json);
+
                 }
                 process.waitFor();
             }
         } catch (IOException | InterruptedException e) {
             logger.debug("Exception happened: {}", e);
         }
+
     }
 
     /**
@@ -163,6 +166,10 @@ public class IotaUtils {
         } else {
             return false;
         }
+    }
+
+    public boolean checkSeed(String seed) {
+        return InputValidator.isValidSeed(seed);
     }
 
     public int getStart() {

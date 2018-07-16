@@ -169,7 +169,6 @@ public class IotaItemStateChangeListener implements StateChangeListener {
      * @param item
      */
     public void removeItemFromJson(@NonNull Item item) {
-
         String seed = seedByUID.get(item.getUID());
         if (seed != null && !seed.isEmpty()) {
             for (Iterator<JsonElement> it = jsonObjectBySeed.get(seed).get("Items").getAsJsonArray().iterator(); it
@@ -185,6 +184,10 @@ public class IotaItemStateChangeListener implements StateChangeListener {
 
     public JsonObject getJsonObjectBySeed(String seed) {
         return jsonObjectBySeed.get(seed);
+    }
+
+    public void addJsonObjectBySeed(String seed, JsonObject json) {
+        jsonObjectBySeed.put(seed, json);
     }
 
     public void addSeedByUID(String UID, String seed) {

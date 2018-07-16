@@ -8,10 +8,13 @@ Bundle-Version: 0.10.0.qualifier
 Export-Package: org.eclipse.smarthome.binding.iota;uses:="org.eclipse.smarthome.test"
 Fragment-Host: org.eclipse.smarthome.binding.iota
 Import-Package: 
+ com.google.gson,
  org.eclipse.jdt.annotation;resolution:=optional,
  org.eclipse.smarthome.binding.iota.handler,
  org.eclipse.smarthome.core.common.registry,
  org.eclipse.smarthome.core.events,
+ org.eclipse.smarthome.core.items,
+ org.eclipse.smarthome.core.library.items,
  org.eclipse.smarthome.core.thing,
  org.eclipse.smarthome.core.thing.binding,
  org.eclipse.smarthome.core.thing.binding.builder,
@@ -20,7 +23,7 @@ Import-Package:
  org.eclipse.smarthome.test.storage,
  org.hamcrest;core=split,
  org.hamcrest.core,
- org.junit;version="4.0.0",
+ org.junit,
  org.mockito,
  org.mockito.invocation,
  org.mockito.stubbing,
