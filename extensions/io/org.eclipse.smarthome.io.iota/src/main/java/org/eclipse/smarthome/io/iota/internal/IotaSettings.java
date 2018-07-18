@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Provides the configured and static settings for the IOTA addon
+ * The {@link IotaSettings} provides the configured and static settings for the IOTA addon
  *
  * @author Theo Giovanna - Initial Contribution
  */

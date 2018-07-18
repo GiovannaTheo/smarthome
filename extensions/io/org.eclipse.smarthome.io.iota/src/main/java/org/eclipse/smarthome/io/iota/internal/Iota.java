@@ -17,7 +17,7 @@ import java.util.Map;
 import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.items.ItemRegistry;
 import org.eclipse.smarthome.core.items.MetadataRegistry;
-import org.eclipse.smarthome.io.iota.metadata.IotaService;
+import org.eclipse.smarthome.io.iota.metadata.IotaMetadataRegistryChangeListener;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
 import jota.IotaAPI;
 
 /**
- * Set up the IOTA API and the metadata listener
+ * The {@link Iota} sets up the IOTA API, the metadata and item registry change listener
  *
  * @author Theo Giovanna - Initial Contribution
  */
@@ -36,29 +36,29 @@ import jota.IotaAPI;
 public class Iota {
 
     private final Logger logger = LoggerFactory.getLogger(Iota.class);
-    private final IotaService service = new IotaService();
+    private final IotaMetadataRegistryChangeListener metadataRegistryChangeListener = new IotaMetadataRegistryChangeListener();
     private final IotaSettings settings = new IotaSettings();
-    private final IotaItemRegistryListener itemListener = new IotaItemRegistryListener();
+    private final IotaItemRegistryChangeListener itemRegistryChangeListener = new IotaItemRegistryChangeListener();
 
     @Reference
     public void setItemRegistry(ItemRegistry itemRegistry) {
-        itemListener.setItemRegistry(itemRegistry);
-        itemListener.setService(service);
-        service.setItemListener(itemListener);
-        service.setSettings(settings);
+        itemRegistryChangeListener.setItemRegistry(itemRegistry);
+        itemRegistryChangeListener.setMetadataRegistryChangeListener(metadataRegistryChangeListener);
+        metadataRegistryChangeListener.setItemRegistryChangeListener(itemRegistryChangeListener);
+        metadataRegistryChangeListener.setSettings(settings);
     }
 
     public void unsetItemRegistry(ItemRegistry itemRegistry) {
-        itemListener.setItemRegistry(null);
+        itemRegistryChangeListener.setItemRegistry(null);
     }
 
     @Reference
     protected void setMetadataRegistry(MetadataRegistry metadataRegistry) {
-        service.setMetadataRegistry(metadataRegistry);
+        metadataRegistryChangeListener.setMetadataRegistry(metadataRegistry);
     }
 
     protected void unsetMetadataRegistry(MetadataRegistry metadataRegistry) {
-        service.setMetadataRegistry(null);
+        metadataRegistryChangeListener.setMetadataRegistry(null);
     }
 
     /*
@@ -74,9 +74,9 @@ public class Iota {
         try {
             // Updates the API config
             settings.fill(config);
-            service.setSettings(settings);
-            service.setBridge(new IotaAPI.Builder().protocol(settings.getProtocol()).host(settings.getHost())
-                    .port(String.valueOf(settings.getPort())).build());
+            metadataRegistryChangeListener.setSettings(settings);
+            metadataRegistryChangeListener.setBridge(new IotaAPI.Builder().protocol(settings.getProtocol())
+                    .host(settings.getHost()).port(String.valueOf(settings.getPort())).build());
         } catch (Exception e) {
             logger.debug("Could not initialize IOTA API: {}", e.getMessage());
             return;
@@ -85,7 +85,7 @@ public class Iota {
 
     @Deactivate
     protected void deactivate() {
-        service.setBridge(null);
-        service.stop();
+        metadataRegistryChangeListener.setBridge(null);
+        metadataRegistryChangeListener.stop();
     }
 }

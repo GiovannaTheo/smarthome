@@ -28,7 +28,7 @@ import org.eclipse.smarthome.config.core.metadata.MetadataConfigDescriptionProvi
 import org.osgi.service.component.annotations.Component;
 
 /**
- * Describes the metadata for the "iota" namespace.
+ * Theo {@link IotaMetadataProvider} describes the metadata for the "iota" namespace.
  *
  * @author Theo Giovanna - initial contribution
  *
@@ -76,5 +76,4 @@ public class IotaMetadataProvider implements MetadataConfigDescriptionProvider {
         }
         return null;
     }
-
 }

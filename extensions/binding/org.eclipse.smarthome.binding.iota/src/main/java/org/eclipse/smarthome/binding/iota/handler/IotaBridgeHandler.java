@@ -29,7 +29,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * The {@link IotaBridgeHandler} is responsible for handling the
- * bridge over IOTA's distributed ledger, Tangle.
+ * bridge over IOTA's distributed ledger, the Tangle.
  *
  * @author Theo Giovanna - Initial Contribution
  */
@@ -52,10 +52,9 @@ public class IotaBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void initialize() {
+
         logger.debug("Initializing IOTA bridge");
-
         Configuration config = getThing().getConfiguration();
-
         setHost(getOrDefault(config.get(IotaBindingConstants.HOST), getHost()));
         setProtocol(getOrDefault(config.get(IotaBindingConstants.PROTOCOL), getProtocol()));
         setPort(getOrDefault(config.get(IotaBindingConstants.PORT), getPort()));
@@ -67,7 +66,6 @@ public class IotaBridgeHandler extends BaseBridgeHandler {
         } else {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.OFFLINE.COMMUNICATION_ERROR, "Node unreachable");
         }
-
     }
 
     private static String getOrDefault(Object value, String defaultValue) {
@@ -109,5 +107,4 @@ public class IotaBridgeHandler extends BaseBridgeHandler {
     public void setUtils(IotaUtils utils) {
         this.utils = utils;
     }
-
 }

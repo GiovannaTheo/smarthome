@@ -52,16 +52,13 @@ public class IotaHandlerFactory extends BaseThingHandlerFactory implements Trans
     @Override
     public @Nullable ThingHandler createHandler(Thing thing) {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
-
         if (IotaBindingConstants.THING_TYPE_IOTA.equals(thingTypeUID)) {
             return new IotaThingHandler(thing, this);
         }
-
         if (IotaBindingConstants.THING_TYPE_BRIDGE.equals(thingTypeUID)) {
             IotaBridgeHandler handler = new IotaBridgeHandler((Bridge) thing);
             return handler;
         }
-
         return null;
     }
 
@@ -69,5 +66,4 @@ public class IotaHandlerFactory extends BaseThingHandlerFactory implements Trans
     public TransformationService getTransformationService(@NonNull String type) {
         return TransformationHelper.getTransformationService(bundleContext, type);
     }
-
 }

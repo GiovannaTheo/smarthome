@@ -26,7 +26,8 @@ import org.junit.Test;
 import org.mockito.Mock;
 
 /**
- * Test cases for {@link IotaBridgeHandler}. The tests provide mocks for supporting entities using Mockito.
+ * The {@link IotaBridgeHandlerTest} provides test cases for the {@link IotaBridgeHandler}. The tests provide mocks for
+ * supporting entities using Mockito.
  *
  * @author Theo Giovanna - Initial contribution
  */

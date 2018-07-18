@@ -18,22 +18,22 @@ import org.eclipse.smarthome.core.items.GenericItem;
 import org.eclipse.smarthome.core.items.Item;
 import org.eclipse.smarthome.core.items.ItemRegistry;
 import org.eclipse.smarthome.core.items.ItemRegistryChangeListener;
-import org.eclipse.smarthome.io.iota.metadata.IotaService;
+import org.eclipse.smarthome.io.iota.metadata.IotaMetadataRegistryChangeListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Listens for changes to the item registry.
+ * The {@link IotaItemRegistryChangeListener} listens for changes in the item registry.
  *
  * @author Theo Giovanna - Initial Contribution
  */
-public class IotaItemRegistryListener implements ItemRegistryChangeListener {
+public class IotaItemRegistryChangeListener implements ItemRegistryChangeListener {
 
     private ItemRegistry itemRegistry;
-    private IotaService service;
-    private final Logger logger = LoggerFactory.getLogger(IotaItemRegistryListener.class);
+    private IotaMetadataRegistryChangeListener metadataRegistryChangeListener;
+    private final Logger logger = LoggerFactory.getLogger(IotaItemRegistryChangeListener.class);
 
-    public IotaItemRegistryListener() {
+    public IotaItemRegistryChangeListener() {
 
     }
 
@@ -46,24 +46,24 @@ public class IotaItemRegistryListener implements ItemRegistryChangeListener {
         return this.itemRegistry;
     }
 
-    public void setService(IotaService service) {
-        this.service = service;
+    public void setMetadataRegistryChangeListener(IotaMetadataRegistryChangeListener metadataRegistryChangeListener) {
+        this.metadataRegistryChangeListener = metadataRegistryChangeListener;
     }
 
     @Override
     public void added(Item element) {
-        service.getMetadataRegistry().getAll().forEach(metadata -> {
+        metadataRegistryChangeListener.getMetadataRegistry().getAll().forEach(metadata -> {
             if (metadata.getUID().getItemName().equals(element.getName())) {
-                service.added(metadata);
+                metadataRegistryChangeListener.added(metadata);
             }
         });
     }
 
     @Override
     public void removed(Item element) {
-        ((GenericItem) element).removeStateChangeListener(service.getStateListener());
-        service.getMetadataRegistry().removeItemMetadata(element.getName());
-        service.getStateListener().removeItemFromJson(element);
+        ((GenericItem) element).removeStateChangeListener(metadataRegistryChangeListener.getItemStateChangeListener());
+        metadataRegistryChangeListener.getMetadataRegistry().removeItemMetadata(element.getName());
+        metadataRegistryChangeListener.getItemStateChangeListener().removeItemFromJson(element);
         logger.debug("Item, Metadata, State listener removed for item {}", element.getName().toString());
     }
 

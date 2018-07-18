@@ -16,11 +16,12 @@ import org.eclipse.smarthome.binding.iota.handler.IotaThingHandler;
 import org.eclipse.smarthome.core.types.State;
 
 /**
- * Represents the value of the {@link IotaThingHandler}.
+ * The {@link AbstractIotaThingValue} represents the value of the {@link IotaThingHandler}.
  *
  * @author Theo Giovanna - Initial contribution
  */
 public interface AbstractIotaThingValue {
+
     /**
      * Returns the current value state.
      */
@@ -32,4 +33,5 @@ public interface AbstractIotaThingValue {
      * @param updatedValue
      */
     public State update(String updatedValue) throws IllegalArgumentException;
+
 }

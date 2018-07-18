@@ -19,7 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Seed and key generator for the iota Tangle
+ * The {@link IotaSeedGenerator} allows seed and key generation for the iota Tangle
  *
  * @author Theo Giovanna - Initial Contribution
  */
@@ -35,6 +35,11 @@ public class IotaSeedGenerator {
 
     }
 
+    /**
+     * Generate a new seed
+     *
+     * @return a seed
+     */
     public String getNewSeed() {
         try {
             sr = SecureRandom.getInstanceStrong();
@@ -43,16 +48,19 @@ public class IotaSeedGenerator {
         }
 
         StringBuilder sb = new StringBuilder(SEED_LEN);
-
         for (int i = 0; i < SEED_LEN; i++) {
             int n = sr.nextInt(27);
             char c = TRYTE_ALPHABET.charAt(n);
             sb.append(c);
         }
-
         return sb.toString();
     }
 
+    /**
+     * Generates a new private key
+     *
+     * @return a private key
+     */
     public String getNewPrivateKey() {
         try {
             sr = SecureRandom.getInstanceStrong();
@@ -61,13 +69,11 @@ public class IotaSeedGenerator {
         }
 
         StringBuilder sb = new StringBuilder(SEED_LEN);
-
         for (int i = 0; i < SEED_LEN; i++) {
             int n = sr.nextInt(26);
             char c = KEY_ALPHABET.charAt(n);
             sb.append(c);
         }
-
         return sb.toString();
     }
 }

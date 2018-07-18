@@ -21,7 +21,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.smarthome.core.items.Item;
 import org.eclipse.smarthome.core.items.StateChangeListener;
 import org.eclipse.smarthome.core.types.State;
-import org.eclipse.smarthome.io.iota.metadata.IotaService;
+import org.eclipse.smarthome.io.iota.metadata.IotaMetadataRegistryChangeListener;
 import org.eclipse.smarthome.io.iota.utils.IotaUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ import jota.IotaAPI;
 import jota.dto.response.GetNodeInfoResponse;
 
 /**
- * Listens for changes to the state of registered items.
+ * The {@link IotaItemStateChangeListener} listens for changes to the state of registered items.
  * Each item wishing to publish its state on the Tangle has a seed associated to its UID.
  * A custom seed may be given to some item. This way, any ESH instance is able to select
  * which item's state to share on which channel.
@@ -50,14 +50,13 @@ public class IotaItemStateChangeListener implements StateChangeListener {
     private final HashMap<String, Debouncer> debouncerBySeed = new HashMap<>();
     private final HashMap<String, IotaUtils> utilsBySeed = new HashMap<>();
     private final HashMap<String, String> privateKeyBySeed = new HashMap<>();
-    private IotaService service;
+    private IotaMetadataRegistryChangeListener metadataRegistryChangeListener;
 
     @Override
     public void stateChanged(@NonNull Item item, @NonNull State oldState, @NonNull State newState) {
-        service.getMetadataRegistry().getAll().forEach(metadata -> {
+        metadataRegistryChangeListener.getMetadataRegistry().getAll().forEach(metadata -> {
             if (metadata.getUID().getItemName().equals(item.getName())) {
                 String seed = seedByUID.get(item.getUID());
-
                 if (jsonObjectBySeed.containsKey(seed)) {
                     /**
                      * Entries already exists. Updating the value in the json array
@@ -72,8 +71,10 @@ public class IotaItemStateChangeListener implements StateChangeListener {
                     jsonObjectBySeed.put(seed,
                             addToStates(item, newState, new Gson().fromJson("{\"Items\":[]}", JsonObject.class)));
                 }
+
                 String mode = metadata.getConfiguration().get("mode").toString();
                 Debouncer debouncer = debouncerBySeed.get(seed);
+
                 if (debouncer != null) {
                     /**
                      * If several items publish on the same channel, the debounce mechanism bellow
@@ -110,8 +111,8 @@ public class IotaItemStateChangeListener implements StateChangeListener {
         }
     }
 
-    public void setService(IotaService service) {
-        this.service = service;
+    public void setMetadataRegistryChangeListener(IotaMetadataRegistryChangeListener metadataRegistryChangeListener) {
+        this.metadataRegistryChangeListener = metadataRegistryChangeListener;
     }
 
     /**
@@ -120,7 +121,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
      * @param item
      * @param state
      */
-    public synchronized JsonObject addToStates(@NonNull Item item, @NonNull State state, JsonObject json) {
+    public JsonObject addToStates(@NonNull Item item, @NonNull State state, JsonObject json) {
 
         JsonObject itemName = new JsonObject();
         JsonObject itemState = new JsonObject();
@@ -131,15 +132,12 @@ public class IotaItemStateChangeListener implements StateChangeListener {
             }
             itemState.addProperty("State", state.toFullString());
             itemState.addProperty("Time", Instant.now().toString());
-
             itemName.addProperty("Name", item.getName().toString());
             itemName.add("Status", itemState);
-
             json.get("Items").getAsJsonArray().add(itemName);
         } else {
             for (Iterator<JsonElement> it = json.get("Items").getAsJsonArray().iterator(); it.hasNext();) {
                 JsonElement el = it.next();
-
                 String name = el.getAsJsonObject().get("Name").toString().replace("\"", "");
                 if (name.equals(item.getName().toString())) {
                     // Item already tracked. Removing it to update value
@@ -151,15 +149,11 @@ public class IotaItemStateChangeListener implements StateChangeListener {
             }
             itemState.addProperty("State", state.toFullString());
             itemState.addProperty("Time", Instant.now().toString());
-
             itemName.addProperty("Name", item.getName().toString());
             itemName.add("Status", itemState);
-
             json.get("Items").getAsJsonArray().add(itemName);
         }
-
         return json;
-
     }
 
     /**

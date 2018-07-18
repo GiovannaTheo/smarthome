@@ -44,7 +44,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 /**
- * Test cases for {@link IotaHandler}. The tests provide mocks for supporting entities using Mockito.
+ * The {@link IotaHandlerTest} provides test cases for {@link IotaHandler}. The tests provide mocks for supporting
+ * entities using Mockito.
  *
  * @author Theo Giovanna - Initial contribution
  */
@@ -53,9 +54,9 @@ public class IotaHandlerTest {
     private MockIotaThingHandler thingHandler;
     private Item item;
     private State state;
-    JsonObject data;
-    JsonObject itemName;
-    JsonObject itemState;
+    private JsonObject data;
+    private JsonObject itemName;
+    private JsonObject itemState;
 
     @Mock
     private ThingHandlerCallback thingCallback;

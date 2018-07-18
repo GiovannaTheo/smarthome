@@ -26,7 +26,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * Test cases for {@link IotaHandlerFactory}. The tests provide mocks for supporting entities using Mockito.
+ * The {@link IotaHandlerFactoryTest} provides test cases for {@link IotaHandlerFactory}. The tests provide mocks for
+ * supporting entities using Mockito.
  *
  * @author Theo Giovanna - Initial contribution
  */

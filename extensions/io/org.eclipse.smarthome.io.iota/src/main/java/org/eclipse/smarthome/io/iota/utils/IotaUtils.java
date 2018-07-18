@@ -26,7 +26,7 @@ import jota.IotaAPI;
 import jota.utils.InputValidator;
 
 /**
- * Provides utils methods to work with IOTA transactions
+ * The {@link IotaUtils} provides utils methods to work with IOTA transactions.
  *
  * @author Theo Giovanna - Initial Contribution
  */
@@ -37,8 +37,9 @@ public class IotaUtils {
     private String seed = null;
     private int start = 0;
     private IotaAPI bridge;
-    Process process;
+    private Process process;
     private String oldResult = "";
+    private final String npmPath = isWindows() ? "npm.cmd" : "/usr/local/bin/node";
 
     public IotaUtils() {
 
@@ -71,20 +72,20 @@ public class IotaUtils {
             case "public":
             case "private":
                 param = start == -1
-                        ? new String[] { "/usr/local/bin/node", PATH + "publish.js",
+                        ? new String[] { npmPath, PATH + "publish.js",
                                 bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
                                 payload, mode, seed }
-                        : new String[] { "/usr/local/bin/node", PATH + "publish.js",
+                        : new String[] { npmPath, PATH + "publish.js",
                                 bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
                                 payload, mode, seed, String.valueOf(start) };
                 break;
             case "restricted":
                 if (key != null && !key.isEmpty()) {
                     param = start == -1
-                            ? new String[] { "/usr/local/bin/node", PATH + "publish.js",
+                            ? new String[] { npmPath, PATH + "publish.js",
                                     bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
                                     payload, mode, key, seed }
-                            : new String[] { "/usr/local/bin/node", PATH + "publish.js",
+                            : new String[] { npmPath, PATH + "publish.js",
                                     bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
                                     payload, mode, key, seed, String.valueOf(start) };
                 } else {
@@ -100,13 +101,12 @@ public class IotaUtils {
             if (param != null) {
                 logger.debug("Doing proof of work to attach data to the Tangle.... Processing in mode -- {} -- ", mode);
                 process = Runtime.getRuntime().exec(param);
-                String resultPublic = IOUtils.toString(process.getInputStream(), "UTF-8");
-                if (resultPublic != null && !resultPublic.isEmpty()) {
-                    JsonObject json = (JsonObject) parser.parse(resultPublic);
+                String result = IOUtils.toString(process.getInputStream(), "UTF-8");
+                if (result != null && !result.isEmpty()) {
+                    JsonObject json = (JsonObject) parser.parse(result);
                     start = json.getAsJsonPrimitive("START").getAsInt();
                     seed = json.getAsJsonPrimitive("SEED").getAsString();
                     logger.debug("Sent: {}", json);
-
                 }
                 process.waitFor();
             }
@@ -117,26 +117,32 @@ public class IotaUtils {
     }
 
     /**
-     * Retrieve item states from the Tangle, through MAM
+     * Retrieve a message from the Tangle, through MAM
      *
-     * @param bridge the IOTA API endpoint
+     * @param refresh the refresh interval
+     * @param root    the root address on which to listen to
+     * @param mode    the mode (public, private, restricted) for MAM
+     * @param key     the key if restricted mode is used
+     * @return the fetched message
      */
     public String fetchFromTangle(int refresh, String root, String mode, String key) {
+
         String[] cmd;
         JsonParser parser = new JsonParser();
         JsonObject json = new JsonObject();
+
         if (key == null || key.isEmpty()) {
-            cmd = refresh == 0 ? new String[] { "/usr/local/bin/node", PATH + "fetchSync.js",
+            cmd = refresh == 0 ? new String[] { npmPath, PATH + "fetchSync.js",
                     bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root, mode }
-                    : new String[] { "/usr/local/bin/node", PATH + "fetchAsync.js",
+                    : new String[] { npmPath, PATH + "fetchAsync.js",
                             bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root,
                             mode };
         } else {
             cmd = refresh == 0
-                    ? new String[] { "/usr/local/bin/node", PATH + "fetchSync.js",
+                    ? new String[] { npmPath, PATH + "fetchSync.js",
                             bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root,
                             mode, key }
-                    : new String[] { "/usr/local/bin/node", PATH + "fetchAsync.js",
+                    : new String[] { npmPath, PATH + "fetchAsync.js",
                             bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root,
                             mode, key };
         }
@@ -160,14 +166,21 @@ public class IotaUtils {
         }
     }
 
+    /**
+     * Check the validity of the Iota API node
+     *
+     * @return true if connexion is successful
+     */
     public boolean checkAPI() {
-        if (bridge.getNodeInfo() != null) {
-            return true;
-        } else {
-            return false;
-        }
+        return bridge.getNodeInfo() != null ? true : false;
     }
 
+    /**
+     * Check the validity of a seed
+     *
+     * @param seed the seed to validate
+     * @return true if the seed is valid
+     */
     public boolean checkSeed(String seed) {
         return InputValidator.isValidSeed(seed);
     }
@@ -178,5 +191,9 @@ public class IotaUtils {
 
     public void setStart(int start) {
         this.start = start;
+    }
+
+    public static boolean isWindows() {
+        return System.getProperty("os.name").toLowerCase().contains("win");
     }
 }

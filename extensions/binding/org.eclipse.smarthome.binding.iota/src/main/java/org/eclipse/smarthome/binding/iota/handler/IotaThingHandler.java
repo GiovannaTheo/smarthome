@@ -57,8 +57,6 @@ import com.google.gson.JsonParser;
  */
 public class IotaThingHandler extends BaseThingHandler implements ChannelStateUpdateListener {
 
-    // TODO: add tests
-
     private final Logger logger = LoggerFactory.getLogger(IotaThingHandler.class);
     private TransformationServiceProvider transformationServiceProvider;
     private final Map<ChannelUID, ChannelConfig> channelDataByChannelUID = new HashMap<>();
@@ -81,30 +79,24 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-
         ChannelConfig data = channelDataByChannelUID.get(channelUID);
-
         if (data == null) {
             logger.warn("Channel {} not supported", channelUID.getId());
             return;
         }
-
         if (command instanceof RefreshType) {
             if (data.value.getValue() != null) {
                 updateState(channelUID.getId(), data.value.getValue());
                 return;
             }
         }
-
     }
 
     @Override
     public void initialize() {
 
         logger.debug("Initializing Iota handler.");
-
         Configuration configuration = getThing().getConfiguration();
-
         setRoot(getOrDefault(configuration.get(ROOT_ADDRESS), getRoot()));
         setRefresh(getOrDefault(configuration.get(REFRESH_INTERVAL), getRefresh()));
         setMode(getOrDefault(configuration.get(MODE), getMode()));
@@ -159,7 +151,6 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
                     default:
                         throw new IllegalArgumentException("ThingTypeUID not recognised");
                 }
-
                 channelDataByChannelUID.put(channel.getUID(), config);
             }
         }
@@ -294,7 +285,6 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
                     }
                 }
             }
-
         }
     }
 

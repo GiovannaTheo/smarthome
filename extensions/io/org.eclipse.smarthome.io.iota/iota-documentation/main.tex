@@ -85,7 +85,7 @@ Using this add-on, you will be able to configure for each \textit{Thing} of your
 
 \begin{itemize}
 	\item Protocol: \texttt{https}
-	\item Host: \texttt{iotanode.us}
+	\item Host: \texttt{nodes.tangle.testnet.iota.org}
 	\item Port: \texttt{443}
 \end{itemize} 
 
@@ -112,7 +112,7 @@ The basic idea behind this add-on is to use the Tangle capabilities in order to 
 The iota add-on implements several interfaces from ESH, some of which are enumerated and explained below:
 
 \begin{itemize}
-	\item \texttt{\textcolor{red}{RegistryChangeListener<Metadata>}}, implemented by \texttt{\textcolor{OliveGreen}{IotaService}}: Each time a metadata is added, updated or removed, the implementing class is notified.
+	\item \texttt{\textcolor{red}{RegistryChangeListener<Metadata>}}, implemented by \texttt{\textcolor{OliveGreen}{IotaMetadataRegistryChangeListener}}: Each time a metadata is added, updated or removed, the implementing class is notified.
 	\item \texttt{\textcolor{red}{ItemRegistryChangeListener}}, implemented by \texttt{\textcolor{OliveGreen}{IotaItemRegistryListener}}: Each time an item is added, updated or removed, the implementing class is notified.
 	\item \texttt{\textcolor{red}{StateChangeListener}}, implemented by \texttt{\textcolor{OliveGreen}{IotaItemStateChangeListener}}: Each time an item sees its state changed or updated, the implementing class if notified. 
 	\item \texttt{\textcolor{red}{MetadataConfigDescriptionProvider}}, implemented by \texttt{\textcolor{OliveGreen}{IotaMetadataProvider}}: Allows one to offer different configuration for metadata in the PaperUI.
@@ -212,14 +212,14 @@ public class IotaApiConfiguration {
 }
 \end{minted}
 
-\subsection{\texttt{IotaItemRegistryListener.java}}
+\subsection{\texttt{IotaItemRegistryChangeListener.java}}
 
 \begin{minted}[frame=single,framesep=10pt]{java}
 /**
  * Listens for changes to the item registry.
  * @author Theo Giovanna - Initial Contribution
  */
-public class IotaItemRegistryListener implements ItemRegistryChangeListener {
+public class IotaItemRegistryChangeListener implements ItemRegistryChangeListener {
 
 	/**
 	 * Called when items are added, removed or updated
@@ -289,7 +289,7 @@ public class IotaMetadataProvider implements MetadataConfigDescriptionProvider {
 
 \newpage
 
-\subsection{\texttt{IotaService.java}}
+\subsection{\texttt{IotaMetadataRegistryChangeListener.java}}
 
 \begin{minted}[frame=single,framesep=10pt]{java}
 /**
@@ -299,7 +299,7 @@ public class IotaMetadataProvider implements MetadataConfigDescriptionProvider {
  * created.
  * @author Theo Giovanna - Initial Contribution
  */
-public class IotaService implements RegistryChangeListener<Metadata> {
+public class IotaMetadataRegistryChangeListener implements RegistryChangeListener<Metadata> {
 	
 	/**
 	 * Called when metadata are added, removed or updated
@@ -357,24 +357,23 @@ public class IotaSettings {
  * @author Theo Giovanna - Initial Contribution
  */
 public class IotaUtils {
-	
 	/**
 	 * Attach an item's state to the Tangle
 	 */
 	protected void publishState(JsonElement jsonElement, String mode, 
 	String key) {}
-	
 	/**
 	 * Retrieve an item state from the Tangle, through MAM
 	 */
-	 public String fetchFromTangle(int refresh, String root, String mode) {}
-	 
+	 public String fetchFromTangle(int refresh, String root, String mode) {} 
+	/**
+	 * Checks the IOTA API
+	 */
+	 public boolean checkAPI() {}
 	 /**
-	  * Checks the IOTA API
-	  */
-	  public boolean checkAPI() {}
-
-	
+	 * Check the validity of a seed
+	 */
+	 public boolean checkSeed(String seed) {}
 }
 \end{minted}
 

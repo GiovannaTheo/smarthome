@@ -20,7 +20,7 @@ import org.eclipse.smarthome.core.items.ItemNotFoundException;
 import org.eclipse.smarthome.core.items.Metadata;
 import org.eclipse.smarthome.core.items.MetadataRegistry;
 import org.eclipse.smarthome.io.iota.internal.Debouncer;
-import org.eclipse.smarthome.io.iota.internal.IotaItemRegistryListener;
+import org.eclipse.smarthome.io.iota.internal.IotaItemRegistryChangeListener;
 import org.eclipse.smarthome.io.iota.internal.IotaItemStateChangeListener;
 import org.eclipse.smarthome.io.iota.internal.IotaSeedGenerator;
 import org.eclipse.smarthome.io.iota.internal.IotaSettings;
@@ -32,20 +32,20 @@ import org.slf4j.LoggerFactory;
 import jota.IotaAPI;
 
 /**
- * Listens for changes to the metadata registry.
+ * The {@link IotaMetadataRegistryChangeListener} listens for changes to the metadata registry.
  * This class will allow items to be listened to through the IotaItemStateChangeListener class if they
  * contain the metadata IOTA, when created.
  *
  * @author Theo Giovanna - Initial Contribution
  */
 @Component(immediate = true)
-public class IotaService implements RegistryChangeListener<Metadata> {
+public class IotaMetadataRegistryChangeListener implements RegistryChangeListener<Metadata> {
 
     private MetadataRegistry metadataRegistry;
-    private final Logger logger = LoggerFactory.getLogger(IotaService.class);
-    private IotaItemRegistryListener itemListener;
+    private final Logger logger = LoggerFactory.getLogger(IotaMetadataRegistryChangeListener.class);
+    private IotaItemRegistryChangeListener itemRegistryChangeListener;
     private IotaSettings settings;
-    private final IotaItemStateChangeListener stateListener = new IotaItemStateChangeListener();
+    private final IotaItemStateChangeListener itemStateChangeListener = new IotaItemStateChangeListener();
     private final IotaSeedGenerator seedGenerator = new IotaSeedGenerator();
     private IotaAPI bridge;
 
@@ -57,9 +57,9 @@ public class IotaService implements RegistryChangeListener<Metadata> {
          */
         Item item;
         try {
-            stateListener.setService(this);
-            if (CollectionUtils.isNotEmpty(itemListener.getItemRegistry().getAll())) {
-                item = itemListener.getItemRegistry().getItem(element.getUID().getItemName());
+            itemStateChangeListener.setMetadataRegistryChangeListener(this);
+            if (CollectionUtils.isNotEmpty(itemRegistryChangeListener.getItemRegistry().getAll())) {
+                item = itemRegistryChangeListener.getItemRegistry().getItem(element.getUID().getItemName());
                 if (item instanceof GenericItem) {
                     if (element.getValue() != null) {
                         if (element.getValue().equals("yes")) {
@@ -71,7 +71,6 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                  * existing one is used. If a new seed is used, a corresponding debouncing instance
                                  * and utils instance are created.
                                  */
-
                                 String seed;
                                 if (element.getConfiguration().get("seed") == null) {
                                     logger.debug("A new seed will be generated for item {}", item.getUID());
@@ -84,7 +83,6 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                     /**
                                      * Uses an existing seed to publish this item states
                                      */
-
                                     seed = element.getConfiguration().get("seed").toString();
                                     if (seed != null && !seed.isEmpty() && seed.length() == 81) {
                                         logger.debug("An existing seed will be used for item {}", item.getUID());
@@ -94,15 +92,17 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                          * If so, associating the item UID to it, otherwise creating a new
                                          * instance of IOTA Utils for publishing.
                                          */
-
-                                        if (stateListener.getUtilsBySeed(seed) != null) {
-                                            stateListener.addSeedByUID(item.getUID(), seed);
+                                        if (itemStateChangeListener.getUtilsBySeed(seed) != null) {
+                                            itemStateChangeListener.addSeedByUID(item.getUID(), seed);
                                         } else {
                                             updateMaps(item, seed);
-                                            // -1 indicates the JS script to recompute itself the depth
-                                            // of the merkle root tree by fetching all the data from the
-                                            // initial root
-                                            stateListener.getUtilsBySeed(seed).setStart(-1);
+
+                                            /**
+                                             * -1 indicates the JS script to recompute itself the depth
+                                             * of the merkle root tree by fetching all the data from the
+                                             * initial root.
+                                             */
+                                            itemStateChangeListener.getUtilsBySeed(seed).setStart(-1);
                                         }
 
                                     } else {
@@ -117,30 +117,29 @@ public class IotaService implements RegistryChangeListener<Metadata> {
                                 /**
                                  * If restricted mode was selected, the private key is saved, otherwise generated.
                                  */
-
                                 if (element.getConfiguration().get("mode").equals("restricted") && !seed.isEmpty()) {
                                     if (element.getConfiguration().get("key") != null) {
                                         logger.debug("An existing key will be used for item {}", item.getUID());
                                         String inputKey = element.getConfiguration().get("key").toString();
                                         if (inputKey != null && !inputKey.isEmpty()) {
-                                            stateListener.addPrivateKeyBySeed(seed, inputKey);
+                                            itemStateChangeListener.addPrivateKeyBySeed(seed, inputKey);
                                         }
                                     } else {
                                         logger.debug("Invalid key for item {}. Generating a new one", item.getUID());
                                         String key = seedGenerator.getNewPrivateKey();
-                                        stateListener.addPrivateKeyBySeed(seed, key);
+                                        itemStateChangeListener.addPrivateKeyBySeed(seed, key);
                                         element.getConfiguration().put("key", key);
                                         metadataRegistry.update(element);
                                     }
                                 }
 
                                 logger.debug("Iota state listener added for item: {}", item.getName());
-                                ((GenericItem) item).addStateChangeListener(stateListener);
+                                ((GenericItem) item).addStateChangeListener(itemStateChangeListener);
 
                                 /**
                                  * Publish the state
                                  */
-                                stateListener.stateChanged(item, item.getState(), item.getState());
+                                itemStateChangeListener.stateChanged(item, item.getState(), item.getState());
                             }
                         }
                     }
@@ -161,8 +160,8 @@ public class IotaService implements RegistryChangeListener<Metadata> {
         logger.debug("Iota metadata updated");
         if (element.getValue().equals("no")) {
             try {
-                Item item = itemListener.getItemRegistry().getItem(oldElement.getUID().getItemName());
-                itemListener.removed(item);
+                Item item = itemRegistryChangeListener.getItemRegistry().getItem(oldElement.getUID().getItemName());
+                itemRegistryChangeListener.removed(item);
             } catch (ItemNotFoundException e) {
                 logger.debug("Exception happened: {}", e);
             }
@@ -176,9 +175,9 @@ public class IotaService implements RegistryChangeListener<Metadata> {
      * @param seed
      */
     public void updateMaps(Item item, String seed) {
-        stateListener.addSeedByUID(item.getUID(), seed);
-        stateListener.addDebouncerBySeed(seed, new Debouncer());
-        stateListener.addUtilsBySeed(seed,
+        itemStateChangeListener.addSeedByUID(item.getUID(), seed);
+        itemStateChangeListener.addDebouncerBySeed(seed, new Debouncer());
+        itemStateChangeListener.addUtilsBySeed(seed,
                 new IotaUtils(bridge.getProtocol(), bridge.getHost(), Integer.parseInt(bridge.getPort()), seed, 0));
     }
 
@@ -198,8 +197,8 @@ public class IotaService implements RegistryChangeListener<Metadata> {
         return settings;
     }
 
-    public IotaItemStateChangeListener getStateListener() {
-        return stateListener;
+    public IotaItemStateChangeListener getItemStateChangeListener() {
+        return itemStateChangeListener;
     }
 
     public MetadataRegistry getMetadataRegistry() {
@@ -210,8 +209,8 @@ public class IotaService implements RegistryChangeListener<Metadata> {
         this.settings = settings;
     }
 
-    public void setItemListener(IotaItemRegistryListener itemListener) {
-        this.itemListener = itemListener;
+    public void setItemRegistryChangeListener(IotaItemRegistryChangeListener itemRegistryChangeListener) {
+        this.itemRegistryChangeListener = itemRegistryChangeListener;
     }
 
     public void setBridge(IotaAPI bridge) {

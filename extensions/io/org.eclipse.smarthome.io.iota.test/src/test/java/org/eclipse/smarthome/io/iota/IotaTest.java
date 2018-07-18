@@ -38,14 +38,15 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 
 /**
- * Tests cases for Iota IO classes. The tests provide mocks for supporting entities using Mockito.
+ * The {@link IotaTest} provides tests cases for Iota IO classes. The tests provide mocks for supporting entities using
+ * Mockito.
  *
  * @author Theo Giovanna - Initial contribution
  */
 public class IotaTest {
 
     private IotaUtils utils;
-    private IotaItemStateChangeListener stateListener;
+    private IotaItemStateChangeListener itemStateChangeListener;
     private Item item1;
     private Item item2;
     private State state1;
@@ -57,7 +58,7 @@ public class IotaTest {
     @Before
     public void setUp() {
         initMocks(this);
-        stateListener = new IotaItemStateChangeListener();
+        itemStateChangeListener = new IotaItemStateChangeListener();
         IotaSeedGenerator gen = new IotaSeedGenerator();
         String seed = gen.getNewSeed();
         utils = new IotaUtils("https", "nodes.testnet.iota.org", 443, seed, -1);
@@ -86,15 +87,15 @@ public class IotaTest {
         // No items have been added yet
         assertThat(existingStates.get("Items").getAsJsonArray().size(), is(equalTo(0)));
         // Adding state 1
-        existingStates = stateListener.addToStates(item1, item1.getState(), existingStates);
+        existingStates = itemStateChangeListener.addToStates(item1, item1.getState(), existingStates);
         // Size of the array should now be 1
         assertThat(existingStates.get("Items").getAsJsonArray().size(), is(equalTo(1)));
         // Adding state 2
-        existingStates = stateListener.addToStates(item2, item2.getState(), existingStates);
+        existingStates = itemStateChangeListener.addToStates(item2, item2.getState(), existingStates);
         // Size of the array should now be 2
         assertThat(existingStates.get("Items").getAsJsonArray().size(), is(equalTo(2)));
         // Adding the same state twice should not change the array size, but should update the element
-        existingStates = stateListener.addToStates(item2, item2.getState(), existingStates);
+        existingStates = itemStateChangeListener.addToStates(item2, item2.getState(), existingStates);
         // Size of the array should still be 2
         assertThat(existingStates.get("Items").getAsJsonArray().size(), is(equalTo(2)));
     }
@@ -103,15 +104,15 @@ public class IotaTest {
     public void existingStateShouldDelete() {
         JsonObject existingStates = new Gson().fromJson("{\"Items\":[]}", JsonObject.class);
         // Adding state 1
-        existingStates = stateListener.addToStates(item1, item1.getState(), existingStates);
+        existingStates = itemStateChangeListener.addToStates(item1, item1.getState(), existingStates);
         // Size of the array should now be 1
         assertThat(existingStates.get("Items").getAsJsonArray().size(), is(equalTo(1)));
         IotaSeedGenerator gen = new IotaSeedGenerator();
         String seed = gen.getNewSeed();
-        stateListener.addSeedByUID(item1.getUID(), seed);
-        stateListener.addJsonObjectBySeed(seed, existingStates);
+        itemStateChangeListener.addSeedByUID(item1.getUID(), seed);
+        itemStateChangeListener.addJsonObjectBySeed(seed, existingStates);
         // Removing the state
-        stateListener.removeItemFromJson(item1);
+        itemStateChangeListener.removeItemFromJson(item1);
         // Size of the array should now be 0
         assertThat(existingStates.get("Items").getAsJsonArray().size(), is(equalTo(0)));
     }

@@ -19,7 +19,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Implements a debounce mechanism.
+ * The {@link Debouncer} provides a debounce mechanism.
  *
  * @author Theo Giovanna - Initial Contribution
  */

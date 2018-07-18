@@ -20,29 +20,26 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Contains parsed channel configuration and runtime fields like the channel value.
+ * The {@link ChannelConfig} contains parsed channel configuration and runtime fields like the channel value.
  *
  * @author David Graeff - Initial contribution
  */
 public class ChannelConfig {
+
     private final Logger logger = LoggerFactory.getLogger(ChannelConfig.class);
 
     String stateTopic;
     String transformationPattern;
-
     BigDecimal min = BigDecimal.valueOf(0);
     BigDecimal max = BigDecimal.valueOf(100);
     BigDecimal step = BigDecimal.valueOf(1);
     Boolean isFloat = false;
     Boolean inverse = false;
-
     String on;
     String off;
-
     String transformationServiceName;
 
     AbstractIotaThingValue value;
-
     ChannelUID channelUID;
     TransformationServiceProvider transformationServiceProvider;
     ChannelStateUpdateListener channelStateUpdateListener = null;

@@ -48,4 +48,5 @@ public class IotaBindingConstants {
     public static final String NUMBER_CHANNEL = "number";
     public static final String PERCENTAGE_CHANNEL = "percentage";
     public static final String ONOFF_CHANNEL = "onoff";
+
 }
