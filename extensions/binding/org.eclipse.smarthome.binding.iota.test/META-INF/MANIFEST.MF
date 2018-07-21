@@ -11,6 +11,7 @@ Import-Package:
  com.google.gson,
  org.eclipse.jdt.annotation;resolution:=optional,
  org.eclipse.smarthome.binding.iota.handler,
+ org.eclipse.smarthome.config.core,
  org.eclipse.smarthome.core.common.registry,
  org.eclipse.smarthome.core.events,
  org.eclipse.smarthome.core.items,

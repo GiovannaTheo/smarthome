@@ -12,9 +12,7 @@
  */
 package org.eclipse.smarthome.io.iota;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.junit.Assert.assertEquals;
 
 import javax.measure.quantity.Dimensionless;
 import javax.measure.quantity.Temperature;
@@ -25,14 +23,12 @@ import org.eclipse.smarthome.core.library.items.NumberItem;
 import org.eclipse.smarthome.core.library.types.QuantityType;
 import org.eclipse.smarthome.core.library.unit.SIUnits;
 import org.eclipse.smarthome.core.library.unit.SmartHomeUnits;
-import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.types.State;
 import org.eclipse.smarthome.io.iota.internal.IotaItemStateChangeListener;
 import org.eclipse.smarthome.io.iota.internal.IotaSeedGenerator;
 import org.eclipse.smarthome.io.iota.utils.IotaUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -52,12 +48,8 @@ public class IotaTest {
     private State state1;
     private State state2;
 
-    @Mock
-    private Thing thing;
-
     @Before
     public void setUp() {
-        initMocks(this);
         itemStateChangeListener = new IotaItemStateChangeListener();
         IotaSeedGenerator gen = new IotaSeedGenerator();
         String seed = gen.getNewSeed();
@@ -78,26 +70,26 @@ public class IotaTest {
     @Test
     public void generatedSeedShouldBeValid() {
         IotaSeedGenerator gen = new IotaSeedGenerator();
-        assertThat(utils.checkSeed(gen.getNewSeed()), is(equalTo(true)));
+        assertEquals(utils.checkSeed(gen.getNewSeed()), true);
     }
 
     @Test
     public void newStateShouldAddToExistingStates() {
         JsonObject existingStates = new Gson().fromJson("{\"Items\":[]}", JsonObject.class);
         // No items have been added yet
-        assertThat(existingStates.get("Items").getAsJsonArray().size(), is(equalTo(0)));
+        assertEquals(existingStates.get("Items").getAsJsonArray().size(), 0);
         // Adding state 1
         existingStates = itemStateChangeListener.addToStates(item1, item1.getState(), existingStates);
         // Size of the array should now be 1
-        assertThat(existingStates.get("Items").getAsJsonArray().size(), is(equalTo(1)));
+        assertEquals(existingStates.get("Items").getAsJsonArray().size(), 1);
         // Adding state 2
         existingStates = itemStateChangeListener.addToStates(item2, item2.getState(), existingStates);
         // Size of the array should now be 2
-        assertThat(existingStates.get("Items").getAsJsonArray().size(), is(equalTo(2)));
+        assertEquals(existingStates.get("Items").getAsJsonArray().size(), 2);
         // Adding the same state twice should not change the array size, but should update the element
         existingStates = itemStateChangeListener.addToStates(item2, item2.getState(), existingStates);
         // Size of the array should still be 2
-        assertThat(existingStates.get("Items").getAsJsonArray().size(), is(equalTo(2)));
+        assertEquals(existingStates.get("Items").getAsJsonArray().size(), 2);
     }
 
     @Test
@@ -106,7 +98,7 @@ public class IotaTest {
         // Adding state 1
         existingStates = itemStateChangeListener.addToStates(item1, item1.getState(), existingStates);
         // Size of the array should now be 1
-        assertThat(existingStates.get("Items").getAsJsonArray().size(), is(equalTo(1)));
+        assertEquals(existingStates.get("Items").getAsJsonArray().size(), 1);
         IotaSeedGenerator gen = new IotaSeedGenerator();
         String seed = gen.getNewSeed();
         itemStateChangeListener.addSeedByUID(item1.getUID(), seed);
@@ -114,7 +106,7 @@ public class IotaTest {
         // Removing the state
         itemStateChangeListener.removeItemFromJson(item1);
         // Size of the array should now be 0
-        assertThat(existingStates.get("Items").getAsJsonArray().size(), is(equalTo(0)));
+        assertEquals(existingStates.get("Items").getAsJsonArray().size(), 0);
     }
 
 }

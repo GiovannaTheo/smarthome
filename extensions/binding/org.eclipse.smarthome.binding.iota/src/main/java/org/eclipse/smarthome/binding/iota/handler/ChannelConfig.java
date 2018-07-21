@@ -62,4 +62,36 @@ public class ChannelConfig {
         channelStateUpdateListener = null;
     }
 
+    public void setValue(AbstractIotaThingValue value) {
+        this.value = value;
+    }
+
+    public AbstractIotaThingValue getValue() {
+        return value;
+    }
+
+    public void setChannelUID(ChannelUID channelUID) {
+        this.channelUID = channelUID;
+    }
+
+    public void setChannelStateUpdateListener(ChannelStateUpdateListener channelStateUpdateListener) {
+        this.channelStateUpdateListener = channelStateUpdateListener;
+    }
+
+    public void setStateTopic(String stateTopic) {
+        this.stateTopic = stateTopic;
+    }
+
+    public String getTransformationPattern() {
+        return transformationPattern;
+    }
+
+    public void setTransformationPattern(String transformationPattern) {
+        this.transformationPattern = transformationPattern;
+    }
+
+    public void setTransformationServiceName(String transformationServiceName) {
+        this.transformationServiceName = transformationServiceName;
+    }
+
 }

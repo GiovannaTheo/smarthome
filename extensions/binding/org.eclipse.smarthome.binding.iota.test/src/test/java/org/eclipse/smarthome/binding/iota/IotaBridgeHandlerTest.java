@@ -12,18 +12,26 @@
  */
 package org.eclipse.smarthome.binding.iota;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
-import static org.mockito.MockitoAnnotations.initMocks;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import org.eclipse.smarthome.binding.iota.handler.IotaBridgeHandler;
+import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.thing.Bridge;
+import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
+import org.eclipse.smarthome.core.thing.ThingTypeUID;
+import org.eclipse.smarthome.core.thing.binding.ThingHandlerCallback;
+import org.eclipse.smarthome.core.thing.binding.builder.BridgeBuilder;
 import org.eclipse.smarthome.io.iota.utils.IotaUtils;
+import org.eclipse.smarthome.test.java.JavaTest;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 
 /**
  * The {@link IotaBridgeHandlerTest} provides test cases for the {@link IotaBridgeHandler}. The tests provide mocks for
@@ -31,23 +39,40 @@ import org.mockito.Mock;
  *
  * @author Theo Giovanna - Initial contribution
  */
-public class IotaBridgeHandlerTest {
+public class IotaBridgeHandlerTest extends JavaTest {
 
-    private MockIotaBridgeHandler bridgeHandler;
-
-    @Mock
+    private MockIotaBridgeHandler iotaBridgeHandler;
+    private Map<String, Object> bridgeProperties;
     private Bridge bridge;
 
     @Before
     public void setUp() {
-        initMocks(this);
-        bridgeHandler = new MockIotaBridgeHandler(bridge);
+        initializeBridge();
+    }
+
+    @Test
+    public void bridgeShouldInitialize() {
+        waitForAssert(() -> assertEquals(ThingStatus.ONLINE, bridge.getStatus()));
     }
 
     @Test
     public void checkDefaultApiIsOnline() {
-        bridgeHandler.initialize();
-        assertThat(bridgeHandler.getUtils().checkAPI(), is(equalTo(true)));
+        assertEquals(iotaBridgeHandler.getUtils().checkAPI(), true);
+    }
+
+    public void initializeBridge() {
+        bridgeProperties = new HashMap<>();
+        bridge = BridgeBuilder.create(new ThingTypeUID("iota", "test-bridge"), "testbridge").withLabel("Test Bridge")
+                .withConfiguration(new Configuration(bridgeProperties)).build();
+        iotaBridgeHandler = new IotaBridgeHandlerTest().new MockIotaBridgeHandler(bridge);
+        bridge.setHandler(iotaBridgeHandler);
+        ThingHandlerCallback bridgeHandler = mock(ThingHandlerCallback.class);
+        doAnswer(answer -> {
+            ((Thing) answer.getArgument(0)).setStatusInfo(answer.getArgument(1));
+            return null;
+        }).when(bridgeHandler).statusUpdated(any(), any());
+        iotaBridgeHandler.setCallback(bridgeHandler);
+        iotaBridgeHandler.initialize();
     }
 
     class MockIotaBridgeHandler extends IotaBridgeHandler {

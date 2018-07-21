@@ -13,7 +13,7 @@
 package org.eclipse.smarthome.binding.iota;
 
 import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
 import org.eclipse.smarthome.binding.iota.handler.IotaBridgeHandler;
@@ -44,7 +44,7 @@ public class IotaHandlerFactoryTest {
     public void shoudlReturnNullForUnknownThingTypeUID() {
         Thing thing = mock(Thing.class);
         when(thing.getThingTypeUID()).thenReturn(new ThingTypeUID("anyBinding:someThingType"));
-        assertThat(factory.createHandler(thing), is(nullValue()));
+        assertEquals(factory.createHandler(thing), null);
     }
 
     @Test

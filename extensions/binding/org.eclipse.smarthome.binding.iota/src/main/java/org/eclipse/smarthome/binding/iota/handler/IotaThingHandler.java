@@ -22,6 +22,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.smarthome.binding.iota.IotaBindingConstants;
 import org.eclipse.smarthome.binding.iota.internal.NumberValue;
 import org.eclipse.smarthome.binding.iota.internal.OnOffValue;
@@ -339,5 +340,9 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
     @Override
     public void channelStateUpdated(ChannelUID channelUID, State value) {
         updateState(channelUID.getId(), value);
+    }
+
+    public void addChannelDataByChannelUID(@NonNull ChannelUID uid, ChannelConfig config) {
+        channelDataByChannelUID.put(uid, config);
     }
 }
