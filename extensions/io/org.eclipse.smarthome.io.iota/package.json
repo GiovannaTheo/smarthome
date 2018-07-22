@@ -2,10 +2,10 @@
     "name": "mam.client.js",
     "private": false,
     "version": "0.0.2",
-    "main": "lib/mam.client.js",
+    "main": "lib/mam/lib/mam.client.js",
     "scripts": {
         "node": "webpack --progress --colors --watch --env node",
-        "web": "browserify -r ./src/node.js:mam.web.js > ./lib/mam.web.js",
+        "web": "browserify -r .lib/mam/src/node.js:mam.web.js > .lib/mam/lib/mam.web.js",
         "build": "webpack"
     },
     "engines": {
