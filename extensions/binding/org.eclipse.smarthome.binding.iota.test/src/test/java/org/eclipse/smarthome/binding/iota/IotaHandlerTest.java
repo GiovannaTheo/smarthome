@@ -102,11 +102,11 @@ public class IotaHandlerTest extends JavaTest {
         // Initialize thing and set value to channel
         initializeThingAndChannel("1.0 °C", "TEMPERATURE");
         // Current state value should be 1.0 °C
-        assertEquals(config.getValue().getValue().toFullString(), "1.0 °C");
+        assertEquals("1.0 °C", config.getValue().getValue().toFullString());
         // Updating the channel value with the Json Data
         iotaThingHandler.updateAllStates(data.get("Items").getAsJsonArray());
         // New state value should be 2.0 °C
-        assertEquals(config.getValue().getValue().toFullString(), "2.0 °C");
+        assertEquals("2.0 °C", config.getValue().getValue().toFullString());
     }
 
     @Test
@@ -114,13 +114,13 @@ public class IotaHandlerTest extends JavaTest {
         // Initialize thing and set value to channel
         initializeThingAndChannel("1.0 °C", "PRESSURE");
         // Current state value should be 1.0 °C
-        assertEquals(config.getValue().getValue().toFullString(), "1.0 °C");
+        assertEquals("1.0 °C", config.getValue().getValue().toFullString());
         // Updating the channel value with the Json Data
         iotaThingHandler.updateAllStates(data.get("Items").getAsJsonArray());
         // Since this channel's topic is set to "PRESSURE" and that the topic of the Json Data is set to "TEMPERATURE"
         // it is expected that the channel's value is not updated
         // New state value should be 1.0 °C
-        assertEquals(config.getValue().getValue().toFullString(), "1.0 °C");
+        assertEquals("1.0 °C", config.getValue().getValue().toFullString());
     }
 
     @Test
@@ -128,11 +128,11 @@ public class IotaHandlerTest extends JavaTest {
         // Initialize thing and set value to channel
         initializeThingAndChannel("1.0 °C", "ANY");
         // Current state value should be 1.0 °C
-        assertEquals(config.getValue().getValue().toFullString(), "1.0 °C");
+        assertEquals("1.0 °C", config.getValue().getValue().toFullString());
         // Updating the channel value with the Json Data
         iotaThingHandler.updateAllStates(data.get("Items").getAsJsonArray());
         // New state value should be 2.0 °C
-        assertEquals(config.getValue().getValue().toFullString(), "2.0 °C");
+        assertEquals("2.0 °C", config.getValue().getValue().toFullString());
     }
 
     @Test
@@ -149,7 +149,7 @@ public class IotaHandlerTest extends JavaTest {
         waitForAssert(() -> assertEquals(ThingStatus.ONLINE, thing.getStatusInfo().getStatus()));
     }
 
-    public void initializeThingAndChannel(String value, String topic) {
+    private void initializeThingAndChannel(String value, String topic) {
 
         /**
          * Initialize thing and add channel
@@ -178,7 +178,7 @@ public class IotaHandlerTest extends JavaTest {
 
     }
 
-    public void initializeBridge() {
+    private void initializeBridge() {
         bridgeProperties = new HashMap<>();
         bridge = BridgeBuilder.create(new ThingTypeUID("iota", "test-bridge"), "testbridge").withLabel("Test Bridge")
                 .withConfiguration(new Configuration(bridgeProperties)).build();
@@ -193,7 +193,7 @@ public class IotaHandlerTest extends JavaTest {
         iotaBridgeHandler.initialize();
     }
 
-    public void initializeThing() {
+    private void initializeThing() {
         initializeBridge();
         waitForAssert(() -> assertEquals(ThingStatus.ONLINE, bridge.getStatus()));
         thingProperties = new HashMap<>();
@@ -213,7 +213,7 @@ public class IotaHandlerTest extends JavaTest {
 
     class MockIotaThingHandler extends IotaThingHandler {
 
-        public MockIotaThingHandler(Thing thing) {
+        MockIotaThingHandler(Thing thing) {
             super(thing);
         }
 
@@ -227,11 +227,11 @@ public class IotaHandlerTest extends JavaTest {
             updateStatus(ThingStatus.ONLINE, ThingStatusDetail.NONE);
         }
 
-        public ThingBuilder getThingBuilder() {
+        ThingBuilder getThingBuilder() {
             return this.editThing();
         }
 
-        public void updateThingMock(Thing thing) {
+        void updateThingMock(Thing thing) {
             updateThing(thing);
         }
     }

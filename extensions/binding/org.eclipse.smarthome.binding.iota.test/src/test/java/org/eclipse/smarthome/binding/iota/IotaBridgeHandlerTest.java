@@ -60,7 +60,7 @@ public class IotaBridgeHandlerTest extends JavaTest {
         assertEquals(iotaBridgeHandler.getUtils().checkAPI(), true);
     }
 
-    public void initializeBridge() {
+    private void initializeBridge() {
         bridgeProperties = new HashMap<>();
         bridge = BridgeBuilder.create(new ThingTypeUID("iota", "test-bridge"), "testbridge").withLabel("Test Bridge")
                 .withConfiguration(new Configuration(bridgeProperties)).build();
@@ -77,7 +77,7 @@ public class IotaBridgeHandlerTest extends JavaTest {
 
     class MockIotaBridgeHandler extends IotaBridgeHandler {
 
-        public MockIotaBridgeHandler(Bridge bridge) {
+        MockIotaBridgeHandler(Bridge bridge) {
             super(bridge);
         }
 

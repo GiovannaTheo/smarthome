@@ -25,13 +25,13 @@ public interface AbstractIotaThingValue {
     /**
      * Returns the current value state.
      */
-    public State getValue();
+    State getValue();
 
     /**
      * Updates the internal value with the received Iota value.
      *
      * @param updatedValue
      */
-    public State update(String updatedValue) throws IllegalArgumentException;
+    State update(String updatedValue) throws IllegalArgumentException;
 
 }

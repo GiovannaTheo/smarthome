@@ -53,11 +53,11 @@ public class Iota {
     }
 
     @Reference
-    protected void setMetadataRegistry(MetadataRegistry metadataRegistry) {
+    public void setMetadataRegistry(MetadataRegistry metadataRegistry) {
         metadataRegistryChangeListener.setMetadataRegistry(metadataRegistry);
     }
 
-    protected void unsetMetadataRegistry(MetadataRegistry metadataRegistry) {
+    public void unsetMetadataRegistry(MetadataRegistry metadataRegistry) {
         metadataRegistryChangeListener.setMetadataRegistry(null);
     }
 
@@ -66,7 +66,7 @@ public class Iota {
      * The Iota API instance is then updated accordingly
      */
     @Activate
-    protected synchronized void activate(Map<String, Object> data) {
+    public synchronized void activate(Map<String, Object> data) {
         modified(new Configuration(data).as(IotaApiConfiguration.class));
     }
 
@@ -79,7 +79,6 @@ public class Iota {
                     .host(settings.getHost()).port(String.valueOf(settings.getPort())).build());
         } catch (Exception e) {
             logger.debug("Could not initialize IOTA API: {}", e.getMessage());
-            return;
         }
     }
 
@@ -87,5 +86,12 @@ public class Iota {
     protected void deactivate() {
         metadataRegistryChangeListener.setBridge(null);
         metadataRegistryChangeListener.stop();
+    }
+
+    /**
+     * Used for OSGi tests
+     */
+    public IotaMetadataRegistryChangeListener getMetadataChangeListener() {
+        return metadataRegistryChangeListener;
     }
 }

@@ -12,11 +12,6 @@
  */
 package org.eclipse.smarthome.binding.iota;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 
@@ -34,9 +29,6 @@ public class IotaBindingConstants {
     // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_IOTA = new ThingTypeUID(BINDING_ID, "topic");
     public static final ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "bridge");
-
-    public static final Set<ThingTypeUID> BRIDGE_THING_TYPES_UIDS = Collections.singleton(THING_TYPE_BRIDGE);
-    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = new HashSet<>(Arrays.asList(THING_TYPE_IOTA));
 
     // Bridge config properties
     public static final String PROTOCOL = "protocol";

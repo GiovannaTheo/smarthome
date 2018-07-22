@@ -48,7 +48,7 @@ public class ChannelConfig {
 
     }
 
-    public void processMessage(String payload) {
+    void processMessage(String payload) {
         try {
             if (channelStateUpdateListener != null) {
                 channelStateUpdateListener.channelStateUpdated(channelUID, value.update(payload));
@@ -80,18 +80,6 @@ public class ChannelConfig {
 
     public void setStateTopic(String stateTopic) {
         this.stateTopic = stateTopic;
-    }
-
-    public String getTransformationPattern() {
-        return transformationPattern;
-    }
-
-    public void setTransformationPattern(String transformationPattern) {
-        this.transformationPattern = transformationPattern;
-    }
-
-    public void setTransformationServiceName(String transformationServiceName) {
-        this.transformationServiceName = transformationServiceName;
     }
 
 }

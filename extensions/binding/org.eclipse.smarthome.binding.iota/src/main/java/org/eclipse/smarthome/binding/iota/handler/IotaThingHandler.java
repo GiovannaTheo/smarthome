@@ -67,7 +67,7 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
     private String mode;
     private String key = null;
     private IotaUtils utils;
-    ScheduledFuture<?> refreshJob;
+    private ScheduledFuture<?> refreshJob;
 
     public IotaThingHandler(Thing thing, TransformationServiceProvider transformationServiceProvider) {
         super(thing);
@@ -88,15 +88,13 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
         if (command instanceof RefreshType) {
             if (data.value.getValue() != null) {
                 updateState(channelUID.getId(), data.value.getValue());
-                return;
             }
         }
     }
 
     @Override
     public void initialize() {
-
-        logger.debug("Initializing Iota handler.");
+        logger.debug("Initializing Iota handler");
         Configuration configuration = getThing().getConfiguration();
         setRoot(getOrDefault(configuration.get(ROOT_ADDRESS), getRoot()));
         setRefresh(getOrDefault(configuration.get(REFRESH_INTERVAL), getRefresh()));
@@ -194,12 +192,11 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
     }
 
     /**
-     * We make this method public to use it explicitely in tests
      *
      * @return success if any data is found in the MAM transaction
      *
      */
-    public synchronized boolean fetchItemState() {
+    private synchronized boolean fetchItemState() {
         boolean success = false;
         if (!root.isEmpty()) {
             JsonParser parser = new JsonParser();
@@ -297,43 +294,39 @@ public class IotaThingHandler extends BaseThingHandler implements ChannelStateUp
         return value instanceof BigDecimal ? ((BigDecimal) value).intValue() : defaultValue;
     }
 
-    public String getRoot() {
+    private String getRoot() {
         return root;
     }
 
-    public void setRoot(String root) {
+    protected void setRoot(String root) {
         this.root = root;
     }
 
-    public int getRefresh() {
+    private int getRefresh() {
         return refresh;
     }
 
-    public void setRefresh(int refresh) {
+    protected void setRefresh(int refresh) {
         this.refresh = refresh;
     }
 
-    public String getMode() {
+    private String getMode() {
         return mode;
     }
 
-    public void setMode(String mode) {
+    protected void setMode(String mode) {
         this.mode = mode;
     }
 
-    public String getKey() {
+    private String getKey() {
         return key;
     }
 
-    public void setKey(String key) {
+    protected void setKey(String key) {
         this.key = key;
     }
 
-    public IotaUtils getUtils() {
-        return this.utils;
-    }
-
-    public void setUtils(IotaUtils utils) {
+    protected void setUtils(IotaUtils utils) {
         this.utils = utils;
     }
 

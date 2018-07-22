@@ -37,7 +37,7 @@ public class IotaItemRegistryChangeListener implements ItemRegistryChangeListene
 
     }
 
-    public synchronized void setItemRegistry(ItemRegistry itemRegistry) {
+    synchronized void setItemRegistry(ItemRegistry itemRegistry) {
         this.itemRegistry = itemRegistry;
         this.itemRegistry.addRegistryChangeListener(this);
     }
@@ -46,7 +46,7 @@ public class IotaItemRegistryChangeListener implements ItemRegistryChangeListene
         return this.itemRegistry;
     }
 
-    public void setMetadataRegistryChangeListener(IotaMetadataRegistryChangeListener metadataRegistryChangeListener) {
+    void setMetadataRegistryChangeListener(IotaMetadataRegistryChangeListener metadataRegistryChangeListener) {
         this.metadataRegistryChangeListener = metadataRegistryChangeListener;
     }
 
@@ -64,7 +64,7 @@ public class IotaItemRegistryChangeListener implements ItemRegistryChangeListene
         ((GenericItem) element).removeStateChangeListener(metadataRegistryChangeListener.getItemStateChangeListener());
         metadataRegistryChangeListener.getMetadataRegistry().removeItemMetadata(element.getName());
         metadataRegistryChangeListener.getItemStateChangeListener().removeItemFromJson(element);
-        logger.debug("Item, Metadata, State listener removed for item {}", element.getName().toString());
+        logger.debug("Item, Metadata, State listener removed for item {}", element.getName());
     }
 
     @Override

@@ -56,8 +56,7 @@ public class IotaHandlerFactory extends BaseThingHandlerFactory implements Trans
             return new IotaThingHandler(thing, this);
         }
         if (IotaBindingConstants.THING_TYPE_BRIDGE.equals(thingTypeUID)) {
-            IotaBridgeHandler handler = new IotaBridgeHandler((Bridge) thing);
-            return handler;
+            return new IotaBridgeHandler((Bridge) thing);
         }
         return null;
     }

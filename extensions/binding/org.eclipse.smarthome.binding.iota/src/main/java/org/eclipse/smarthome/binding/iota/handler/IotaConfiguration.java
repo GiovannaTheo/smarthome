@@ -19,14 +19,9 @@ package org.eclipse.smarthome.binding.iota.handler;
  */
 public class IotaConfiguration {
 
-    public static final String ROOT_ADDRESS = "root";
-    public static final String REFRESH_INTERVAL = "refresh";
-    public static final String MODE = "mode";
-    public static final String PRIVATE_KEY = "key";
-
-    public String root;
-    public int refresh;
-    public String mode;
-    public String key;
+    static final String ROOT_ADDRESS = "root";
+    static final String REFRESH_INTERVAL = "refresh";
+    static final String MODE = "mode";
+    static final String PRIVATE_KEY = "key";
 
 }

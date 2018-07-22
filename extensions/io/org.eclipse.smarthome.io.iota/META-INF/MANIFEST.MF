@@ -32,5 +32,5 @@ Import-Package:
  org.osgi.service.component,
  org.slf4j
 Service-Component: OSGI-INF/*.xml
-Export-Package: org.eclipse.smarthome.io.iota.utils,
- org.eclipse.smarthome.io.iota.metadata;x-internal=true
+Export-Package: org.eclipse.smarthome.io.iota.metadata;x-internal=true,
+ org.eclipse.smarthome.io.iota.utils

@@ -81,12 +81,9 @@ public class IotaItemStateChangeListener implements StateChangeListener {
                      * makes sure the data are published only once if no item has requested an update
                      * within 1 second
                      */
-                    debouncer.debounce(IotaItemStateChangeListener.class, new Runnable() {
-                        @Override
-                        public void run() {
-                            String key = mode.equals("restricted") ? privateKeyBySeed.get(seed) : null;
-                            utilsBySeed.get(seed).publishState(jsonObjectBySeed.get(seed).get("Items"), mode, key);
-                        }
+                    debouncer.debounce(IotaItemStateChangeListener.class, () -> {
+                        String key = mode.equals("restricted") ? privateKeyBySeed.get(seed) : null;
+                        utilsBySeed.get(seed).publishState(jsonObjectBySeed.get(seed).get("Items"), mode, key);
                     }, 1000, TimeUnit.MILLISECONDS);
                 }
             }
@@ -100,7 +97,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
          * Note: for testing purpose, you can call stateChanged(item, state, state) to re-publish
          * data to the Tangle.
          */
-        stateChanged(item, state, state);
+        // stateChanged(item, state, state);
     }
 
     public void setBridge(IotaAPI bridge) {
@@ -128,28 +125,28 @@ public class IotaItemStateChangeListener implements StateChangeListener {
 
         if (json.get("Items").getAsJsonArray().size() == 0) {
             if (item.getCategory() != null) {
-                itemState.addProperty("Topic", item.getCategory().toString());
+                itemState.addProperty("Topic", item.getCategory());
             }
             itemState.addProperty("State", state.toFullString());
             itemState.addProperty("Time", Instant.now().toString());
-            itemName.addProperty("Name", item.getName().toString());
+            itemName.addProperty("Name", item.getName());
             itemName.add("Status", itemState);
             json.get("Items").getAsJsonArray().add(itemName);
         } else {
             for (Iterator<JsonElement> it = json.get("Items").getAsJsonArray().iterator(); it.hasNext();) {
                 JsonElement el = it.next();
                 String name = el.getAsJsonObject().get("Name").toString().replace("\"", "");
-                if (name.equals(item.getName().toString())) {
+                if (name.equals(item.getName())) {
                     // Item already tracked. Removing it to update value
                     it.remove();
                 }
             }
             if (item.getCategory() != null) {
-                itemState.addProperty("Topic", item.getCategory().toString());
+                itemState.addProperty("Topic", item.getCategory());
             }
             itemState.addProperty("State", state.toFullString());
             itemState.addProperty("Time", Instant.now().toString());
-            itemName.addProperty("Name", item.getName().toString());
+            itemName.addProperty("Name", item.getName());
             itemName.add("Status", itemState);
             json.get("Items").getAsJsonArray().add(itemName);
         }
@@ -169,7 +166,7 @@ public class IotaItemStateChangeListener implements StateChangeListener {
                     .hasNext();) {
                 JsonElement el = it.next();
                 String name = el.getAsJsonObject().get("Name").toString().replace("\"", "");
-                if (name.equals(item.getName().toString())) {
+                if (name.equals(item.getName())) {
                     it.remove();
                 }
             }

@@ -56,11 +56,11 @@ public class IotaUtils {
     }
 
     /**
-     * Attach an item state on the Tangle, through MAM
+     * Attach data to the Tangle, through MAM
      *
-     * @param bridge the IOTA API endpoint
-     * @param item   the item for which we want to publish data
-     * @param state  the item's state
+     * @param states the json struct
+     * @param mode   the MAM mode
+     * @param key    the key if using restricted mode
      */
     public void publishState(JsonElement states, String mode, String key) {
 
@@ -71,23 +71,21 @@ public class IotaUtils {
         switch (mode) {
             case "public":
             case "private":
-                param = start == -1
-                        ? new String[] { npmPath, PATH + "publish.js",
-                                bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
-                                payload, mode, seed }
+                param = start == -1 ? new String[] { npmPath, PATH + "publish.js",
+                        bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort(), payload, mode, seed }
                         : new String[] { npmPath, PATH + "publish.js",
-                                bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
-                                payload, mode, seed, String.valueOf(start) };
+                                bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort(), payload, mode,
+                                seed, String.valueOf(start) };
                 break;
             case "restricted":
                 if (key != null && !key.isEmpty()) {
                     param = start == -1
                             ? new String[] { npmPath, PATH + "publish.js",
-                                    bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
-                                    payload, mode, key, seed }
+                                    bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort(), payload,
+                                    mode, key, seed }
                             : new String[] { npmPath, PATH + "publish.js",
-                                    bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(),
-                                    payload, mode, key, seed, String.valueOf(start) };
+                                    bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort(), payload,
+                                    mode, key, seed, String.valueOf(start) };
                 } else {
                     logger.warn("You must provide a key to use the restricted mode. Aborting");
                 }
@@ -132,19 +130,17 @@ public class IotaUtils {
         JsonObject json = new JsonObject();
 
         if (key == null || key.isEmpty()) {
-            cmd = refresh == 0 ? new String[] { npmPath, PATH + "fetchSync.js",
-                    bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root, mode }
+            cmd = refresh == 0
+                    ? new String[] { npmPath, PATH + "fetchSync.js",
+                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort(), root, mode }
                     : new String[] { npmPath, PATH + "fetchAsync.js",
-                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root,
-                            mode };
+                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort(), root, mode };
         } else {
             cmd = refresh == 0
                     ? new String[] { npmPath, PATH + "fetchSync.js",
-                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root,
-                            mode, key }
+                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort(), root, mode, key }
                     : new String[] { npmPath, PATH + "fetchAsync.js",
-                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort().toString(), root,
-                            mode, key };
+                            bridge.getProtocol() + "://" + bridge.getHost() + ":" + bridge.getPort(), root, mode, key };
         }
 
         try {
@@ -157,12 +153,12 @@ public class IotaUtils {
         } catch (IOException | InterruptedException e) {
             logger.debug("Exception happened: {}", e);
         }
+
         if (json.toString().equals("{}")) { // no new data fetched yet, empty json
             return oldResult;
         } else {
             oldResult = json.toString();
             return json.toString();
-
         }
     }
 
@@ -172,7 +168,7 @@ public class IotaUtils {
      * @return true if connexion is successful
      */
     public boolean checkAPI() {
-        return bridge.getNodeInfo() != null ? true : false;
+        return bridge.getNodeInfo() != null;
     }
 
     /**

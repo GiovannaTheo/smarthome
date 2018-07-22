@@ -52,7 +52,6 @@ public class IotaBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void initialize() {
-
         logger.debug("Initializing IOTA bridge");
         Configuration config = getThing().getConfiguration();
         setHost(getOrDefault(config.get(IotaBindingConstants.HOST), getHost()));
@@ -76,27 +75,27 @@ public class IotaBridgeHandler extends BaseBridgeHandler {
         return value instanceof BigDecimal ? ((BigDecimal) value).intValue() : defaultValue;
     }
 
-    public int getPort() {
+    protected int getPort() {
         return port;
     }
 
-    public void setPort(int port) {
+    protected void setPort(int port) {
         this.port = port;
     }
 
-    public String getProtocol() {
+    protected String getProtocol() {
         return protocol;
     }
 
-    public void setProtocol(String protocol) {
+    protected void setProtocol(String protocol) {
         this.protocol = protocol;
     }
 
-    public String getHost() {
+    protected String getHost() {
         return host;
     }
 
-    public void setHost(String host) {
+    protected void setHost(String host) {
         this.host = host;
     }
 
@@ -104,7 +103,7 @@ public class IotaBridgeHandler extends BaseBridgeHandler {
         return utils;
     }
 
-    public void setUtils(IotaUtils utils) {
+    protected void setUtils(IotaUtils utils) {
         this.utils = utils;
     }
 }

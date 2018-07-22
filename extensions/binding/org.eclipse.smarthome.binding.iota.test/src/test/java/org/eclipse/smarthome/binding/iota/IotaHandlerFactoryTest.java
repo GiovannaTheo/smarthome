@@ -41,21 +41,21 @@ public class IotaHandlerFactoryTest {
     }
 
     @Test
-    public void shoudlReturnNullForUnknownThingTypeUID() {
+    public void shouldReturnNullForUnknownThingTypeUID() {
         Thing thing = mock(Thing.class);
         when(thing.getThingTypeUID()).thenReturn(new ThingTypeUID("anyBinding:someThingType"));
         assertEquals(factory.createHandler(thing), null);
     }
 
     @Test
-    public void shoudlReturnIotaThingHandler() {
+    public void shouldReturnIotaThingHandler() {
         Thing thing = mock(Thing.class);
         when(thing.getThingTypeUID()).thenReturn(IotaBindingConstants.THING_TYPE_IOTA);
         assertThat(factory.createHandler(thing), is(instanceOf(IotaThingHandler.class)));
     }
 
     @Test
-    public void shoudlReturnIotaBridgeHandler() {
+    public void shouldReturnIotaBridgeHandler() {
         Bridge bridge = mock(Bridge.class);
         when(bridge.getThingTypeUID()).thenReturn(IotaBindingConstants.THING_TYPE_BRIDGE);
         assertThat(factory.createHandler(bridge), is(instanceOf(IotaBridgeHandler.class)));

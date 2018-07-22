@@ -13,7 +13,6 @@
 package org.eclipse.smarthome.io.iota.internal;
 
 import java.math.BigDecimal;
-import java.net.UnknownHostException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,7 @@ public class IotaSettings {
     private String host = "nodes.testnet.iota.org";
     private final Logger logger = LoggerFactory.getLogger(IotaSettings.class);
 
-    public void fill(IotaApiConfiguration config) throws UnknownHostException {
+    public void fill(IotaApiConfiguration config) {
         logger.debug("Updating settings for IOTA API...");
         setHost(getOrDefault(config.getHost(), getHost()));
         setProtocol(getOrDefault(config.getProtocol(), getProtocol()));
