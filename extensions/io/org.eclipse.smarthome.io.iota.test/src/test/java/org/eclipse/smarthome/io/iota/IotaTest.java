@@ -64,6 +64,17 @@ public class IotaTest {
 
     @Test
     public void apiShouldConnect() {
+        /**
+         * For some reasons, this test passes when executed through Eclipse, but fails when building through maven.
+         * Message: "loader constraint violation: when resolving method
+         * "com.google.gson.Gson.getAdapter(Lcom/google/gson/reflect/TypeToken;)Lcom/google/gson/TypeAdapter";
+         * the class loader (instance of org/eclipse/osgi/internal/loader/EquinoxClassLoader) of the current class,
+         * retrofit2/converter/gson/GsonConverterFactory, and the class loader (instance of
+         * org/eclipse/osgi/internal/loader/EquinoxClassLoader) for the method's defining class,
+         * com/google/gson/Gson, have different Class objects for the type com/google/gson/reflect/TypeToken used in the
+         * signature"
+         * TODO: Fix it
+         */
         // assertTrue(utils.checkAPI());
     }
 

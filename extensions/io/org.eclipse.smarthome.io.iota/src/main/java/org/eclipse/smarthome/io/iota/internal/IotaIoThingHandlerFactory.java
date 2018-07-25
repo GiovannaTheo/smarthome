@@ -12,12 +12,23 @@
  */
 package org.eclipse.smarthome.io.iota.internal;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.config.core.Configuration;
 import org.eclipse.smarthome.core.items.ItemRegistry;
 import org.eclipse.smarthome.core.items.MetadataRegistry;
+import org.eclipse.smarthome.core.thing.Thing;
+import org.eclipse.smarthome.core.thing.ThingTypeUID;
+import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
+import org.eclipse.smarthome.core.thing.binding.ThingHandler;
+import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
+import org.eclipse.smarthome.io.iota.IotaIoBindingConstants;
+import org.eclipse.smarthome.io.iota.handler.IotaIoThingHandler;
 import org.eclipse.smarthome.io.iota.metadata.IotaMetadataRegistryChangeListener;
+import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
@@ -28,17 +39,19 @@ import org.slf4j.LoggerFactory;
 import jota.IotaAPI;
 
 /**
- * The {@link Iota} sets up the IOTA API, the metadata and item registry change listener
+ * The {@link IotaIoThingHandlerFactory} sets up the IOTA API, the metadata and item registry change listener
  *
  * @author Theo Giovanna - Initial Contribution
  */
-@Component(service = Iota.class, configurationPid = "org.eclipse.smarthome.iota", immediate = true)
-public class Iota {
+@Component(service = ThingHandlerFactory.class, configurationPid = "org.eclipse.smarthome.iota", immediate = true)
+public class IotaIoThingHandlerFactory extends BaseThingHandlerFactory {
 
-    private final Logger logger = LoggerFactory.getLogger(Iota.class);
+    private final Logger logger = LoggerFactory.getLogger(IotaIoThingHandlerFactory.class);
     private final IotaMetadataRegistryChangeListener metadataRegistryChangeListener = new IotaMetadataRegistryChangeListener();
     private final IotaSettings settings = new IotaSettings();
     private final IotaItemRegistryChangeListener itemRegistryChangeListener = new IotaItemRegistryChangeListener();
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections
+            .singleton(IotaIoBindingConstants.THING_TYPE_IOTA_IO);
 
     @Reference
     public void setItemRegistry(ItemRegistry itemRegistry) {
@@ -61,16 +74,13 @@ public class Iota {
         metadataRegistryChangeListener.setMetadataRegistry(null);
     }
 
-    /*
-     * This function is called every time that the user updates the API parameters in Paper UI.
-     * The Iota API instance is then updated accordingly
-     */
     @Activate
-    public synchronized void activate(Map<String, Object> data) {
+    public synchronized void activate(ComponentContext componentContext, Map<String, Object> data) {
+        super.activate(componentContext);
         modified(new Configuration(data).as(IotaApiConfiguration.class));
     }
 
-    protected synchronized void modified(IotaApiConfiguration config) {
+    public synchronized void modified(IotaApiConfiguration config) {
         try {
             // Updates the API config
             settings.fill(config);
@@ -86,6 +96,20 @@ public class Iota {
     protected void deactivate() {
         metadataRegistryChangeListener.setBridge(null);
         metadataRegistryChangeListener.stop();
+    }
+
+    @Override
+    public boolean supportsThingType(ThingTypeUID thingTypeUID) {
+        return SUPPORTED_THING_TYPES_UIDS.contains(thingTypeUID);
+    }
+
+    @Override
+    public @Nullable ThingHandler createHandler(Thing thing) {
+        ThingTypeUID thingTypeUID = thing.getThingTypeUID();
+        if (IotaIoBindingConstants.THING_TYPE_IOTA_IO.equals(thingTypeUID)) {
+            return new IotaIoThingHandler(thing);
+        }
+        return null;
     }
 
     /**

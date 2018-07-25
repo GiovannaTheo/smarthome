@@ -35,6 +35,7 @@
    <channel-type id="text">
         <item-type>String</item-type>
         <label>Text value</label>
+        <state readOnly="true"> </state>
         <config-description>
             <parameter name="stateTopic" type="text" required="true">
                 <label>IOTA state topic</label>
@@ -53,6 +54,7 @@
     <channel-type id="number">
         <item-type>Number</item-type>
         <label>Number value</label>
+        <state readOnly="true" pattern="%.2f"> </state>
         <config-description>
             <parameter name="stateTopic" type="text" required="true">
                 <label>IOTA state topic</label>
@@ -82,6 +84,7 @@
     <channel-type id="percentage">
         <item-type>Dimmer</item-type>
         <label>Percentage value</label>
+        <state readOnly="true" pattern="%.2f"> </state>
         <config-description>
             <parameter name="stateTopic" type="text" required="true">
                 <label>IOTA state topic</label>
@@ -121,6 +124,7 @@
     <channel-type id="onoff">
         <item-type>Switch</item-type>
         <label>On/Off value</label>
+        <state readOnly="true"> </state>
         <config-description>
             <parameter name="stateTopic" type="text" required="true">
                 <label>IOTA state topic</label>

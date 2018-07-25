@@ -13,7 +13,7 @@
 package org.eclipse.smarthome.io.iota.internal;
 
 /**
- * The {@link IotaApiConfiguration} exposes configuration parameters of the {@link Iota}.
+ * The {@link IotaApiConfiguration} exposes configuration parameters of the {@link IotaIoThingHandlerFactory}.
  *
  * @author Theo Giovanna - Initial Contribution
  */
