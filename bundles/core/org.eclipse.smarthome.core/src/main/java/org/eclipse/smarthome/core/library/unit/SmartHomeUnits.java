@@ -142,6 +142,8 @@ public class SmartHomeUnits extends AbstractSystemOfUnits {
     public static final Unit<Energy> KILOWATT_HOUR = addUnit(MetricPrefix.KILO(WATT_HOUR));
     public static final Unit<Pressure> MILLIMETRE_OF_MERCURY = addUnit(new TransformedUnit<>("mmHg", Units.PASCAL,
             new RationalConverter(BigInteger.valueOf(133322368), BigInteger.valueOf(1000000))));
+    public static final Unit<Pressure> BAR = addUnit(new TransformedUnit<>("bar", Units.PASCAL,
+            new RationalConverter(BigInteger.valueOf(1), BigInteger.valueOf(100000))));
     public static final Unit<ArealDensity> DOBSON_UNIT = addUnit(
             new ProductUnit<ArealDensity>(MetricPrefix.MILLI(Units.MOLE).multiply(0.4462).divide(Units.METRE.pow(2))));
 
@@ -150,6 +152,7 @@ public class SmartHomeUnits extends AbstractSystemOfUnits {
      */
     static {
         SimpleUnitFormat.getInstance().label(PARTS_PER_MILLION, "ppm");
+        SimpleUnitFormat.getInstance().label(BAR, "bar");
         SimpleUnitFormat.getInstance().label(DECIBEL, "dB");
         SimpleUnitFormat.getInstance().label(IRRADIANCE, "W/m²");
         SimpleUnitFormat.getInstance().label(DEGREE_ANGLE, "°");
@@ -169,6 +172,32 @@ public class SmartHomeUnits extends AbstractSystemOfUnits {
      */
     private static <U extends Unit<?>> U addUnit(U unit) {
         INSTANCE.units.add(unit);
+        addPrefixUnit(unit);
         return unit;
+    }
+
+    private static void addPrefixUnit(Unit<?> unit) {
+        if (unit.getSymbol() != null) {
+            SimpleUnitFormat.getInstance().label(MetricPrefix.YOTTA(unit), "Y" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.ZETTA(unit), "Z" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.EXA(unit), "E" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.PETA(unit), "P" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.TERA(unit), "T" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.GIGA(unit), "G" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.MEGA(unit), "M" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.KILO(unit), "k" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.HECTO(unit), "h" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.DEKA(unit), "da" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.DECI(unit), "d" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.CENTI(unit), "c" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.MILLI(unit), "m" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.MICRO(unit), "µ" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.NANO(unit), "n" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.PICO(unit), "p" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.FEMTO(unit), "f" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.ATTO(unit), "a" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.ZEPTO(unit), "z" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.YOCTO(unit), "y" + unit.getSymbol());
+        }
     }
 }

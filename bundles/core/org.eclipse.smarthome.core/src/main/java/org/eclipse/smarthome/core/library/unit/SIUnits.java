@@ -74,11 +74,37 @@ public class SIUnits extends SmartHomeUnits {
      */
     private static <U extends Unit<?>> U addUnit(U unit) {
         INSTANCE.units.add(unit);
+        addPrefixUnit(unit);
         return unit;
     }
 
     static {
         // Override the default unit symbol ℃ to better support TTS and UIs:
         SimpleUnitFormat.getInstance().label(CELSIUS, "°C");
+    }
+
+    private static void addPrefixUnit(Unit<?> unit) {
+        if (unit.getSymbol() != null) {
+            SimpleUnitFormat.getInstance().label(MetricPrefix.YOTTA(unit), "Y" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.ZETTA(unit), "Z" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.EXA(unit), "E" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.PETA(unit), "P" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.TERA(unit), "T" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.GIGA(unit), "G" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.MEGA(unit), "M" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.KILO(unit), "k" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.HECTO(unit), "h" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.DEKA(unit), "da" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.DECI(unit), "d" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.CENTI(unit), "c" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.MILLI(unit), "m" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.MICRO(unit), "µ" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.NANO(unit), "n" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.PICO(unit), "p" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.FEMTO(unit), "f" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.ATTO(unit), "a" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.ZEPTO(unit), "z" + unit.getSymbol());
+            SimpleUnitFormat.getInstance().label(MetricPrefix.YOCTO(unit), "y" + unit.getSymbol());
+        }
     }
 }
